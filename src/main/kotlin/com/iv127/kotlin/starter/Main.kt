@@ -1,13 +1,18 @@
 package com.iv127.kotlin.starter;
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.slf4j.LoggerFactory
 
 class Main {
     companion object {
+        private val LOG = LoggerFactory.getLogger(Main.javaClass)
+
         @JvmStatic
         fun main(args: Array<String>) {
             embeddedServer(Netty, port = 4207) {
@@ -16,8 +21,23 @@ class Main {
         }
 
         private fun Application.createKtorApplication() {
+            install(StatusPages) {
+                exception<Throwable> { call, cause ->
+                    LOG.error("An unknown error occurred", cause)
+                    call.respondText(
+                        text = "500: $cause",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
+
             routing {
                 get("/") {
+                    LOG.debug("request received")
+                    call.respondText(getClicheMessage())
+                }
+                get("/err") {
+                    throw IllegalStateException("test exception")
                     call.respondText(getClicheMessage())
                 }
             }
