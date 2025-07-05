@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-## Tips and Tricks
+## Info
 
 - To handle manually versions of JDKs on Windows, use <https://github.com/shyiko/jabba>
 - If the main method isn't inside a class, the `Kt` suffix is required, e.g., `mainClass.set("com.iv127.kotlin.starter.MainKt");` where `Main` is the name of the source file. Otherwise, if the `main` method is inside the `Main` class, then `mainClass.set("com.iv127.kotlin.starter.Main")`
@@ -10,8 +10,12 @@
 null, to a non-nullable type.”
   - **Kotlin will fail early here as well. Kotlin adds runtime checks to all
 variable and property assignments where the type is non-nullable.** Kotlin will throw an error on assignment, so in the end, the variable will indeed be non-nullable.
-- Kotlin `let` method woks like `Stream.map` in java (see `com.iv127.kotlin.starter.KotlinLetUsage`)
+- Kotlin `let` method woks like `Stream.map` in java (see `com.iv127.kotlin.starter.KotlinLetUsageTest`)
 - Kotlin `let` on nullable is executed ONLY if value is present
+- **Elvis operator** is a convenient way to specify a default value
+when something is `null` or false, e.g. `var test = nullable ?: default`
+- For `prod` env if env variable `APPLICATION_HTTP_PORT` is not specified, `com.typesafe.config` will fail
+- Nix shell with all settings and env variables; `nix-shell ./app.nix --run bash`
 
 ## References
 

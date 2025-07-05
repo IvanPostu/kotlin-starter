@@ -12,18 +12,19 @@ import org.slf4j.LoggerFactory
 
 class Main {
     companion object {
-        private val LOG = LoggerFactory.getLogger(Main.javaClass)
+        private val LOG = LoggerFactory.getLogger(Main::class.java)
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val webappConfig = createAppConfig()
-
+            val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.PRODUCTION.name)
+            val webappConfig = createAppConfig(env)
             embeddedServer(factory = Netty, port = webappConfig.httpPort) {
-                createKtorApplication()
+                createKtorApplication(webappConfig)
             }.start(wait = true)
         }
 
-        private fun Application.createKtorApplication() {
+        private fun Application.createKtorApplication(webappConfig: WebappConfig) {
+            LOG.info("Application runs in the environment ${webappConfig.env}")
             install(StatusPages) {
                 exception<Throwable> { call, cause ->
                     LOG.error("An unknown error occurred", cause)
@@ -48,17 +49,18 @@ class Main {
 
 
         private fun getClicheMessage(): String {
-            return "Hello, World! Class=" + Main.javaClass.name
+            return "Hello, World! Class=" + Main::class.java
         }
 
-        private fun createAppConfig() =
+        private fun createAppConfig(env: EnvironmentType): WebappConfig =
             ConfigFactory
-                .parseResources("app.conf")
+                .parseResources("app-${env.shortName}.conf")
+                .withFallback(ConfigFactory.parseResources("app.conf"))
                 .resolve()
                 .let {
                     WebappConfig(
                         httpPort = it.getInt("httpPort"),
-                        test1 = null
+                        env = env
                     )
                 }
 
