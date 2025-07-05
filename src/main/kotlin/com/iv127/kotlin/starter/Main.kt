@@ -1,5 +1,6 @@
 package com.iv127.kotlin.starter;
 
+import com.typesafe.config.ConfigFactory
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -15,7 +16,9 @@ class Main {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            embeddedServer(Netty, port = 4207) {
+            val webappConfig = createAppConfig()
+
+            embeddedServer(Netty, port = webappConfig.httpPort) {
                 createKtorApplication()
             }.start(wait = true)
         }
@@ -46,6 +49,16 @@ class Main {
 
         private fun getClicheMessage(): String {
             return "Hello, World! Class=" + Main.javaClass.name
+        }
+
+        private fun createAppConfig(): WebappConfig {
+            val rawConfig = ConfigFactory
+                .parseResources("app.conf")
+                .resolve()
+            return WebappConfig(
+                httpPort = rawConfig.getInt("httpPort"),
+                test1 = null
+            )
         }
 
     }
