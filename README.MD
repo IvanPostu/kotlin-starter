@@ -22,6 +22,7 @@ when something is `null` or false, e.g. `var test = nullable ?: default`
 - Nix shell with all settings and env variables; `nix-shell ./app.nix --run bash`
 - Prefixing application specific environment variables is a good practice
 - Data classes has built-in copy functions
+- Kotlin `fold` works like `reduce` in js or `collect` in java, accumulator can be of any type
 
 ## References
 
