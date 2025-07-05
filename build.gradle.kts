@@ -1,10 +1,15 @@
 plugins {
     id("java")
     kotlin("jvm")
+    id("application")
 }
 
 group = "com.iv127.kotlin.starter"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass.set("com.iv127.kotlin.starter.MainKt")
+}
 
 repositories {
     mavenCentral()

@@ -1,5 +1,10 @@
 package com.iv127.kotlin.starter;
 
-fun main(args: Array<String>) {
-    println("Hello, World!")
+class Main {
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            println("Hello, World! Class=" + Main.javaClass.name)
+        }
+    }
 }
