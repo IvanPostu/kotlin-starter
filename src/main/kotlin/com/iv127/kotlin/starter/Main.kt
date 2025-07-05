@@ -18,7 +18,7 @@ class Main {
         fun main(args: Array<String>) {
             val webappConfig = createAppConfig()
 
-            embeddedServer(Netty, port = webappConfig.httpPort) {
+            embeddedServer(factory = Netty, port = webappConfig.httpPort) {
                 createKtorApplication()
             }.start(wait = true)
         }
@@ -51,15 +51,16 @@ class Main {
             return "Hello, World! Class=" + Main.javaClass.name
         }
 
-        private fun createAppConfig(): WebappConfig {
-            val rawConfig = ConfigFactory
+        private fun createAppConfig() =
+            ConfigFactory
                 .parseResources("app.conf")
                 .resolve()
-            return WebappConfig(
-                httpPort = rawConfig.getInt("httpPort"),
-                test1 = null
-            )
-        }
+                .let {
+                    WebappConfig(
+                        httpPort = it.getInt("httpPort"),
+                        test1 = null
+                    )
+                }
 
     }
 }
