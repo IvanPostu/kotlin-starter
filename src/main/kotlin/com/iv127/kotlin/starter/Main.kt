@@ -39,7 +39,7 @@ class Main {
             routing {
                 get("/") {
                     LOG.debug("request received")
-                    call.respondText(getClicheMessage())
+                    TextWebResponse(getClicheMessage())
                 }
                 get("/err") {
                     throw IllegalStateException("test exception")

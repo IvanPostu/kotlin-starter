@@ -23,6 +23,9 @@ when something is `null` or false, e.g. `var test = nullable ?: default`
 - Prefixing application specific environment variables is a good practice
 - Data classes has built-in copy functions
 - Kotlin `fold` works like `reduce` in js or `collect` in java, accumulator can be of any type
+- **Extension Function** - invoke the
+function as if it were a method defined on the class itself, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
+- A lambda with receiver is a special kind of lambda where you can call methods and access properties of a receiver object directly inside the lambda, without specifying it explicitly, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 
 ## References
 
