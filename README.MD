@@ -1,5 +1,9 @@
 # Kotlin Starter
 
+## Description
+
+A toy project that is a template for my Kotlin projects.
+
 ## Info
 
 - To handle manually versions of JDKs on Windows, use <https://github.com/shyiko/jabba>
@@ -17,7 +21,9 @@ when something is `null` or false, e.g. `var test = nullable ?: default`
 - For `prod` env if env variable `APPLICATION_HTTP_PORT` is not specified, `com.typesafe.config` will fail
 - Nix shell with all settings and env variables; `nix-shell ./app.nix --run bash`
 - Prefixing application specific environment variables is a good practice
+- Data classes has built-in copy functions
 
 ## References
 
 - Lilleaas, A. (2023). *Pro Kotlin Web Apps from Scratch*.
+- <https://kotlinlang.org/docs/sealed-classes.html>
