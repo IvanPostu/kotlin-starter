@@ -16,8 +16,9 @@ class Main {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.PRODUCTION.name)
+            val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
             val webappConfig = createAppConfig(env)
+            LOG.info("Configuration loaded successfully: {}{}", System.lineSeparator(), webappConfig)
             embeddedServer(factory = Netty, port = webappConfig.httpPort) {
                 createKtorApplication(webappConfig)
             }.start(wait = true)
@@ -60,7 +61,8 @@ class Main {
                 .let {
                     WebappConfig(
                         httpPort = it.getInt("httpPort"),
-                        env = env
+                        env = env,
+                        secretExample = "qwerty"
                     )
                 }
 

@@ -16,6 +16,7 @@ variable and property assignments where the type is non-nullable.** Kotlin will 
 when something is `null` or false, e.g. `var test = nullable ?: default`
 - For `prod` env if env variable `APPLICATION_HTTP_PORT` is not specified, `com.typesafe.config` will fail
 - Nix shell with all settings and env variables; `nix-shell ./app.nix --run bash`
+- Prefixing application specific environment variables is a good practice
 
 ## References
 
