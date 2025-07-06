@@ -1,32 +1,41 @@
 package com.iv127.kotlin.starter
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.util.pipeline.*
-import kotliquery.*
-import org.slf4j.LoggerFactory
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.header
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
+import io.ktor.util.pipeline.PipelineContext
+import io.ktor.util.pipeline.PipelineInterceptor
 import javax.sql.DataSource
+import kotliquery.Row
+import kotliquery.Session
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import org.slf4j.LoggerFactory
 
-class Main {
+class Application {
     companion object {
-        private val LOG = LoggerFactory.getLogger(Main::class.java)
+        private val LOG = LoggerFactory.getLogger(Application::class.java)
 
         @JvmStatic
         fun main(args: Array<String>) {
             val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
-            val webappConfig = AppConfigProvider.createAppConfig(env)
+            val webappConfig = createAppConfig(env)
             LOG.info("Configuration loaded successfully: {}{}", System.lineSeparator(), webappConfig)
             embeddedServer(factory = Netty, port = webappConfig.httpPort) {
                 createKtorApplication(webappConfig)
             }.start(wait = true)
         }
 
-        private fun Application.createKtorApplication(webappConfig: WebappConfig) {
+        private fun io.ktor.server.application.Application.createKtorApplication(webappConfig: WebappConfig) {
             val dataSource = createAndMigrateDataSource(webappConfig)
 
             dataSource.getConnection().use { conn ->
@@ -64,7 +73,7 @@ class Main {
                         .header("X-Test-Header", "Just a test!")
                 })
                 get("/err") {
-                    throw IllegalStateException("test exception")
+                    throw IllegalArgumentException("test exception")
                     call.respondText(getClicheMessage())
                 }
                 get("/db_test1", webResponseDb(dataSource) { dbSess ->
@@ -90,7 +99,7 @@ class Main {
 
 
         private fun getClicheMessage(): String {
-            return "Hello, World! Class=" + Main::class.java
+            return "Hello, World! Class=" + Application::class.java
         }
 
         private fun webResponse(
@@ -125,16 +134,16 @@ class Main {
             }
         }
 
-        private fun webResponseTx(
-            dataSource: DataSource,
-            handler: suspend PipelineContext<Unit, ApplicationCall>.(
-                dbSess: TransactionalSession
-            ) -> WebResponse
-        ) = webResponseDb(dataSource) { dbSess ->
-            dbSess.transaction { txSess ->
-                handler(txSess)
-            }
-        }
+//        private fun webResponseTx(
+//            dataSource: DataSource,
+//            handler: suspend PipelineContext<Unit, ApplicationCall>.(
+//                dbSess: TransactionalSession
+//            ) -> WebResponse
+//        ) = webResponseDb(dataSource) { dbSess ->
+//            dbSess.transaction { txSess ->
+//                handler(txSess)
+//            }
+//        }
 
         private fun webResponseDb(
             dataSource: DataSource,
@@ -158,4 +167,10 @@ class Main {
         }
 
     }
+
+    @Suppress("detekt.UnusedPrivateMember", "detekt.FunctionOnlyReturningConstant")
+    private fun noOp(): String {
+        return ""
+    }
+
 }

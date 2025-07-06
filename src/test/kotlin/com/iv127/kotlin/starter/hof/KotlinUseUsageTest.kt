@@ -1,6 +1,7 @@
 package com.iv127.kotlin.starter.hof
 
-import io.ktor.utils.io.core.*
+import io.ktor.utils.io.core.Closeable
+import io.ktor.utils.io.core.use
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

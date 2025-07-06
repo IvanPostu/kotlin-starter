@@ -2,6 +2,7 @@ plugins {
     id("java")
     kotlin("jvm")
     id("application")
+    id("io.gitlab.arturbosch.detekt") version "1.23.0"
 }
 
 group = "com.iv127.kotlin.starter"
@@ -9,6 +10,10 @@ version = "1.0-SNAPSHOT"
 
 application {
     mainClass.set("com.iv127.kotlin.starter.Main")
+}
+
+detekt {
+    config.setFrom(files("detekt.yml"))
 }
 
 repositories {
@@ -36,5 +41,5 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17)
 }

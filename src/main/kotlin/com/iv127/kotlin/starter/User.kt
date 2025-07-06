@@ -1,6 +1,5 @@
 package com.iv127.kotlin.starter
 
-import java.nio.ByteBuffer
 import java.time.OffsetDateTime
 
 data class User(

@@ -1,17 +1,19 @@
 package com.iv127.kotlin.starter
 
-import com.iv127.kotlin.starter.UserDao.Companion.createUser
-import com.iv127.kotlin.starter.UserDao.Companion.getUser
-import com.iv127.kotlin.starter.UserDao.Companion.listUsers
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotliquery.TransactionalSession
 import kotliquery.sessionOf
-import kotlin.test.*
 
 class UserTest {
 
     companion object {
-        val testAppConfig = AppConfigProvider.createAppConfig(EnvironmentType.TEST)
-        val testDataSource = createAndMigrateDataSource(testAppConfig)
+        private val testAppConfig = createAppConfig(EnvironmentType.TEST)
+        private val testDataSource = createAndMigrateDataSource(testAppConfig)
     }
 
     @Test
@@ -83,7 +85,7 @@ class UserTest {
         }
     }
 
-    fun testTx(handler: (dbSess: TransactionalSession) -> Unit) {
+    private fun testTx(handler: (dbSess: TransactionalSession) -> Unit) {
         sessionOf(
             testDataSource,
             returnGeneratedKey = true

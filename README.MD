@@ -4,6 +4,23 @@
 
 A starter Kotlin project.
 
+## Prerequisites
+
+- IntelliJ **detekt** plugin
+  - Enable: Settings -> Tools -> detekt
+  - <img style="width: 550px" src="./forReadme/img1.png" />
+- Disable wildcard imports: Settings -> Editor -> Code Style -> Kotlin
+- New line at the end of the file: Settings -> Editor -> General -> Ensure every saved file ends with a line break
+
+## Shell
+
+```sh
+./gradlew run
+
+# automatically part of the check step
+./gradlew detekt
+```
+
 ## Info
 
 - To handle manually versions of JDKs on Windows, use <https://github.com/shyiko/jabba>
@@ -67,6 +84,8 @@ signifying that your tests have as little knowledge as possible about the inner 
 the system under test
 - testing hierarchy: unit, integration, system, acceptance (E2E)
 
+141
+
 ## API Usage
 
 ```sh
@@ -126,3 +145,4 @@ fun test() {
 - <https://kotlinlang.org/docs/sealed-classes.html>
 - <https://codezup.com/dockerizing-kotlin-application-step-by-step-guide/>
 - <https://flywaydb.org/>
+- <https://www.baeldung.com/kotlin/detekt-static-code-analysis>
