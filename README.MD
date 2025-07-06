@@ -26,6 +26,22 @@ when something is `null` or false, e.g. `var test = nullable ?: default`
 - **Extension Function** - invoke the
 function as if it were a method defined on the class itself, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 - A lambda with receiver is a special kind of lambda where you can call methods and access properties of a receiver object directly inside the lambda, without specifying it explicitly, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
+- > benchmarks and real-world
+experience have shown that in some cases, you’ll get more performance out of your
+database if you limit the maximum allowed number of simultaneous connections to
+about half the maximum of what the database supports — *Lilleaas, A. (2023). Pro Kotlin Web Apps from Scratch*
+- `javax.sql.DataSource` is an abstraction over connection pool
+- DB interaction, briefly:
+  - create connection or get connection from `DataSource`
+  - create statement
+  - statement.executeSql
+  - process result set
+- `Connection` is closeable
+  - If the connection was created manually, `close` disconnects it.
+  - If the connection was obtained from the connection pool, `close` returns it to the pool.
+- > `use()` has the added benefit of wrapping the
+whole operation in a try/catch block so that you close the connection even if control flow
+breaks due to your code throwing an exception. — *Lilleaas, A. (2023). Pro Kotlin Web Apps from Scratch*
 
 ## API Usage
 
@@ -46,3 +62,4 @@ curl -i -X GET http://0.0.0.0:8081/err ; echo -e '\n'
 - Lilleaas, A. (2023). *Pro Kotlin Web Apps from Scratch*.
 - <https://kotlinlang.org/docs/sealed-classes.html>
 - <https://codezup.com/dockerizing-kotlin-application-step-by-step-guide/>
+- <https://flywaydb.org/>

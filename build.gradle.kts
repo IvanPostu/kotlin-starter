@@ -26,6 +26,8 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:2.1.2") // ktor dependency to use hooks like global exception handlers
     implementation("com.typesafe:config:1.4.2") // HOCON format *.conf reader
     implementation("com.google.code.gson:gson:2.10")
+    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("com.h2database:h2:2.1.214")
 }
 
 tasks.test {

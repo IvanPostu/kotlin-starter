@@ -6,6 +6,9 @@ data class WebappConfig(
     val env: EnvironmentType,
     val httpPort: Int,
     val secretExample: String?,
+    val dbUser: String,
+    val dbPassword: String,
+    val dbUrl: String,
 ) {
     override fun toString(): String {
         val secretsRegex = "password|secret|key"

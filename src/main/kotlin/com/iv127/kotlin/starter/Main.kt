@@ -1,6 +1,7 @@
 package com.iv127.kotlin.starter
 
 import com.typesafe.config.ConfigFactory
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -26,6 +27,14 @@ class Main {
         }
 
         private fun Application.createKtorApplication(webappConfig: WebappConfig) {
+            val dataSource = createDataSource(webappConfig)
+
+            dataSource.getConnection().use { conn ->
+                conn.createStatement().use { stmt ->
+                    stmt.executeQuery("SELECT 1")
+                }
+            }
+
             LOG.info("Application runs in the environment ${webappConfig.env}")
             install(StatusPages) {
                 exception<Throwable> { call, cause ->
@@ -75,7 +84,10 @@ class Main {
                     WebappConfig(
                         httpPort = it.getInt("httpPort"),
                         env = env,
-                        secretExample = "qwerty"
+                        secretExample = "qwerty",
+                        dbUrl = it.getString("dbUrl"),
+                        dbUser = it.getString("dbUser"),
+                        dbPassword = it.getString("dbPassword"),
                     )
                 }
 
@@ -110,5 +122,12 @@ class Main {
                 }
             }
         }
+
+        private fun createDataSource(config: WebappConfig) =
+            HikariDataSource().apply {
+                jdbcUrl = config.dbUrl
+                username = config.dbUser
+                password = config.dbPassword
+            }
     }
 }
