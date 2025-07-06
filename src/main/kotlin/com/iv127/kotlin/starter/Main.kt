@@ -1,7 +1,5 @@
 package com.iv127.kotlin.starter
 
-import com.typesafe.config.ConfigFactory
-import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -11,7 +9,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import kotliquery.*
-import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
@@ -22,7 +19,7 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
             val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
-            val webappConfig = createAppConfig(env)
+            val webappConfig = AppConfigProvider.createAppConfig(env)
             LOG.info("Configuration loaded successfully: {}{}", System.lineSeparator(), webappConfig)
             embeddedServer(factory = Netty, port = webappConfig.httpPort) {
                 createKtorApplication(webappConfig)
@@ -96,22 +93,6 @@ class Main {
             return "Hello, World! Class=" + Main::class.java
         }
 
-        private fun createAppConfig(env: EnvironmentType): WebappConfig =
-            ConfigFactory
-                .parseResources("app-${env.shortName}.conf")
-                .withFallback(ConfigFactory.parseResources("app.conf"))
-                .resolve()
-                .let {
-                    WebappConfig(
-                        httpPort = it.getInt("httpPort"),
-                        env = env,
-                        secretExample = "qwerty",
-                        dbUrl = it.getString("dbUrl"),
-                        dbUser = it.getString("dbUser"),
-                        dbPassword = it.getString("dbPassword"),
-                    )
-                }
-
         private fun webResponse(
             handler: suspend PipelineContext<Unit, ApplicationCall>.(
             ) -> WebResponse
@@ -148,7 +129,8 @@ class Main {
             dataSource: DataSource,
             handler: suspend PipelineContext<Unit, ApplicationCall>.(
                 dbSess: TransactionalSession
-            ) -> WebResponse) = webResponseDb(dataSource) { dbSess ->
+            ) -> WebResponse
+        ) = webResponseDb(dataSource) { dbSess ->
             dbSess.transaction { txSess ->
                 handler(txSess)
             }
@@ -175,23 +157,5 @@ class Main {
                 .toMap()
         }
 
-        private fun createAndMigrateDataSource(config: WebappConfig) =
-            createDataSource(config).also(::migrateDataSource)
-
-        private fun createDataSource(config: WebappConfig) =
-            HikariDataSource().apply {
-                jdbcUrl = config.dbUrl
-                username = config.dbUser
-                password = config.dbPassword
-            }
-
-        private fun migrateDataSource(dataSource: DataSource) {
-            Flyway.configure()
-                .dataSource(dataSource)
-                .locations("db/migration")
-                .table("flyway_schema_history")
-                .load()
-                .migrate()
-        }
     }
 }
