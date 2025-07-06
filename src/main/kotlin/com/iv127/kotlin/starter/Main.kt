@@ -10,10 +10,7 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
-import kotliquery.Row
-import kotliquery.Session
-import kotliquery.queryOf
-import kotliquery.sessionOf
+import kotliquery.*
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -144,6 +141,16 @@ class Main {
                         )
                     }
                 }
+            }
+        }
+
+        private fun webResponseTx(
+            dataSource: DataSource,
+            handler: suspend PipelineContext<Unit, ApplicationCall>.(
+                dbSess: TransactionalSession
+            ) -> WebResponse) = webResponseDb(dataSource) { dbSess ->
+            dbSess.transaction { txSess ->
+                handler(txSess)
             }
         }
 

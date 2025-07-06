@@ -1,4 +1,4 @@
-package com.iv127.kotlin.starter
+package com.iv127.kotlin.starter.hof
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
