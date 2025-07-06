@@ -108,7 +108,6 @@ curl -i -X GET http://0.0.0.0:8081/single_user ; echo -e '\n'
 
 ## TODO
 
-- add checkstyle
 - add formatter
 
 ## Nested transaction using kotliquery
