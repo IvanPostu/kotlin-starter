@@ -8,7 +8,7 @@ A starter Kotlin project.
 
 - IntelliJ **detekt** plugin
   - Enable: Settings -> Tools -> detekt
-  - <img style="width: 550px" src="./forReadme/img1.png" />
+  - <img style="width: 650px" src="./forReadme/img1.png" />
 - Disable wildcard imports: Settings -> Editor -> Code Style -> Kotlin
 - New line at the end of the file: Settings -> Editor -> General -> Ensure every saved file ends with a line break
 
