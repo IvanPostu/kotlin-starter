@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class KotlinUseUsageTest {
-
     companion object {
         private class TestCloseable : Closeable {
             private var closed = false
@@ -23,7 +22,7 @@ class KotlinUseUsageTest {
     @Test
     fun `test kotlin use() usage`() {
         val toyCloseable = TestCloseable()
-        assertFalse(toyCloseable.isClosed());
+        assertFalse(toyCloseable.isClosed())
         toyCloseable.use {
             // no-op
         }

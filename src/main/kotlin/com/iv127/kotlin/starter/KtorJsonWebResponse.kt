@@ -8,12 +8,13 @@ import io.ktor.http.withCharset
 
 class KtorJsonWebResponse(
     val body: Any?,
-    override val status: HttpStatusCode = HttpStatusCode.OK
+    override val status: HttpStatusCode = HttpStatusCode.OK,
 ) : OutgoingContent.ByteArrayContent() {
     override val contentType: ContentType =
         ContentType.Application.Json.withCharset(Charsets.UTF_8)
 
-    override fun bytes() = Gson().toJson(body).toByteArray(
-        Charsets.UTF_8
-    )
+    override fun bytes() =
+        Gson().toJson(body).toByteArray(
+            Charsets.UTF_8,
+        )
 }

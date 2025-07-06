@@ -1,16 +1,14 @@
 package com.iv127.kotlin.starter
 
-
+import kotliquery.TransactionalSession
+import kotliquery.sessionOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotliquery.TransactionalSession
-import kotliquery.sessionOf
 
 class UserTest {
-
     companion object {
         private val testAppConfig = createAppConfig(EnvironmentType.TEST)
         private val testDataSource = createAndMigrateDataSource(testAppConfig)
@@ -19,18 +17,20 @@ class UserTest {
     @Test
     fun testCreateUser() {
         testTx { dbSess ->
-            val userAId = createUser(
-                dbSess,
-                email = "test1@me.com",
-                name = "First Last",
-                passwordText = "1234"
-            )
-            val userBId = createUser(
-                dbSess,
-                email = "test2@me.com",
-                name = "First Last",
-                passwordText = "1234"
-            )
+            val userAId =
+                createUser(
+                    dbSess,
+                    email = "test1@me.com",
+                    name = "First Last",
+                    passwordText = "1234",
+                )
+            val userBId =
+                createUser(
+                    dbSess,
+                    email = "test2@me.com",
+                    name = "First Last",
+                    passwordText = "1234",
+                )
             assertNotEquals(userAId, userBId)
         }
     }
@@ -38,12 +38,13 @@ class UserTest {
     @Test
     fun testCreateAnotherUser() {
         testTx { dbSess ->
-            val userId = createUser(
-                dbSess,
-                email = "test1@me.com",
-                name = "First Last",
-                passwordText = "1234"
-            )
+            val userId =
+                createUser(
+                    dbSess,
+                    email = "test1@me.com",
+                    name = "First Last",
+                    passwordText = "1234",
+                )
             assertNotNull(userId)
         }
     }
@@ -51,18 +52,20 @@ class UserTest {
     @Test
     fun testListUsers() {
         testTx { dbSess ->
-            val userAId = createUser(
-                dbSess,
-                email = "test1@me.com",
-                name = "Example",
-                passwordText = "1234"
-            )
-            val userBId = createUser(
-                dbSess,
-                email = "test2@me.com",
-                name = "Example",
-                passwordText = "1234"
-            )
+            val userAId =
+                createUser(
+                    dbSess,
+                    email = "test1@me.com",
+                    name = "Example",
+                    passwordText = "1234",
+                )
+            val userBId =
+                createUser(
+                    dbSess,
+                    email = "test2@me.com",
+                    name = "Example",
+                    passwordText = "1234",
+                )
             val users = listUsers(dbSess)
             assertNotNull(users.find { it.id == userAId })
             assertNotNull(users.find { it.id == userBId })
@@ -72,12 +75,13 @@ class UserTest {
     @Test
     fun testGetUser() {
         testTx { dbSess ->
-            val userId = createUser(
-                dbSess,
-                email = "test1@me.com",
-                name = "Example",
-                passwordText = "1234"
-            )
+            val userId =
+                createUser(
+                    dbSess,
+                    email = "test1@me.com",
+                    name = "Example",
+                    passwordText = "1234",
+                )
             assertNull(getUser(dbSess, -9000))
             val user = getUser(dbSess, userId)
             assertNotNull(user)
@@ -88,7 +92,7 @@ class UserTest {
     private fun testTx(handler: (dbSess: TransactionalSession) -> Unit) {
         sessionOf(
             testDataSource,
-            returnGeneratedKey = true
+            returnGeneratedKey = true,
         ).use { dbSess ->
             dbSess.transaction { dbSessTx ->
                 try {
@@ -99,5 +103,4 @@ class UserTest {
             }
         }
     }
-
 }

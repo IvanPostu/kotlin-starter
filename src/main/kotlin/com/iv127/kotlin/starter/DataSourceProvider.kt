@@ -4,8 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
 import javax.sql.DataSource
 
-fun createAndMigrateDataSource(config: WebappConfig) =
-    createDataSource(config).also(::migrateDataSource)
+fun createAndMigrateDataSource(config: WebappConfig) = createDataSource(config).also(::migrateDataSource)
 
 private fun createDataSource(config: WebappConfig) =
     HikariDataSource().apply {

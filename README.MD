@@ -19,6 +19,9 @@ A starter Kotlin project.
 
 # automatically part of the check step
 ./gradlew detekt
+
+./gradlew ktlintFormat
+./gradlew ktlintCheck
 ```
 
 ## Info
@@ -145,3 +148,4 @@ fun test() {
 - <https://codezup.com/dockerizing-kotlin-application-step-by-step-guide/>
 - <https://flywaydb.org/>
 - <https://www.baeldung.com/kotlin/detekt-static-code-analysis>
+- <https://hofstede-matheus.medium.com/improve-code-quality-with-ktlint-detekt-and-git-hooks-d173722594e4>

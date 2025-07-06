@@ -4,5 +4,4 @@ enum class EnvironmentType(val shortName: String) {
     LOCAL("local"),
     PRODUCTION("prod"),
     TEST("test"),
-
 }

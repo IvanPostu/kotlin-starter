@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertThrowsExactly
 import org.junit.jupiter.api.Test
 
 class JavaPlatformTypeGetIntegerTest {
-
     private val javaPlatformTypeGetInteger: JavaPlatformTypeGetInteger = JavaPlatformTypeGetInteger()
 
     @Test
@@ -16,11 +15,11 @@ class JavaPlatformTypeGetIntegerTest {
 
     @Test
     fun `test with null return value`() {
-        val e: NullPointerException = assertThrowsExactly(NullPointerException::class.java, {
-            val result: Int = javaPlatformTypeGetInteger.getInteger(0)
-            println(result) // result will either be non-null or won't reach this line!
-        })
+        val e: NullPointerException =
+            assertThrowsExactly(NullPointerException::class.java, {
+                val result: Int = javaPlatformTypeGetInteger.getInteger(0)
+                println(result) // result will either be non-null or won't reach this line!
+            })
         assertEquals("getInteger(...) must not be null", e.message)
     }
-
 }

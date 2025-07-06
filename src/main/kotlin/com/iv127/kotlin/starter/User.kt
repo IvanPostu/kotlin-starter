@@ -9,19 +9,22 @@ data class User(
     val email: String,
     val tosAccepted: Boolean,
     val name: String?,
-    val passwordHash: ByteArray
+    val passwordHash: ByteArray,
 ) {
     companion object {
-        fun fromRow(row: Map<String, Any?>) = User(
-            id = row["id"] as Long,
-            createdAt = (row["created_at"] as OffsetDateTime)
-                .toString(),
-            updatedAt = (row["updated_at"] as OffsetDateTime)
-                .toString(),
-            email = row["email"] as String,
-            name = row["name"] as? String,
-            tosAccepted = row["tos_accepted"] as Boolean,
-            passwordHash = row["password_hash"] as ByteArray
-        )
+        fun fromRow(row: Map<String, Any?>) =
+            User(
+                id = row["id"] as Long,
+                createdAt =
+                    (row["created_at"] as OffsetDateTime)
+                        .toString(),
+                updatedAt =
+                    (row["updated_at"] as OffsetDateTime)
+                        .toString(),
+                email = row["email"] as String,
+                name = row["name"] as? String,
+                tosAccepted = row["tos_accepted"] as Boolean,
+                passwordHash = row["password_hash"] as ByteArray,
+            )
     }
 }

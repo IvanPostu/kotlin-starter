@@ -11,8 +11,9 @@ data class WebappConfig(
     val dbUrl: String,
 ) {
     override fun toString(): String {
-        val secretsRegex = "password|secret|key"
-            .toRegex(RegexOption.IGNORE_CASE)
+        val secretsRegex =
+            "password|secret|key"
+                .toRegex(RegexOption.IGNORE_CASE)
         return WebappConfig::class.declaredMemberProperties
             .sortedBy { it.name }
             .map {
