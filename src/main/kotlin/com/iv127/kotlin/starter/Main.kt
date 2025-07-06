@@ -10,7 +10,9 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
+import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
+import javax.sql.DataSource
 
 class Main {
     companion object {
@@ -27,7 +29,7 @@ class Main {
         }
 
         private fun Application.createKtorApplication(webappConfig: WebappConfig) {
-            val dataSource = createDataSource(webappConfig)
+            val dataSource = createAndMigrateDataSource(webappConfig)
 
             dataSource.getConnection().use { conn ->
                 conn.createStatement().use { stmt ->
@@ -123,11 +125,23 @@ class Main {
             }
         }
 
+        fun createAndMigrateDataSource(config: WebappConfig) =
+            createDataSource(config).also(::migrateDataSource)
+
         private fun createDataSource(config: WebappConfig) =
             HikariDataSource().apply {
                 jdbcUrl = config.dbUrl
                 username = config.dbUser
                 password = config.dbPassword
             }
+
+        private fun migrateDataSource(dataSource: DataSource) {
+            Flyway.configure()
+                .dataSource(dataSource)
+                .locations("db/migration")
+                .table("flyway_schema_history")
+                .load()
+                .migrate()
+        }
     }
 }
