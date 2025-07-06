@@ -10,6 +10,10 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
+import kotliquery.Row
+import kotliquery.Session
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -69,6 +73,24 @@ class Main {
                     throw IllegalStateException("test exception")
                     call.respondText(getClicheMessage())
                 }
+                get("/db_test1", webResponseDb(dataSource) { dbSess ->
+                    JsonWebResponse(
+                        dbSess.single(queryOf("SELECT 1"), ::mapFromRow)
+                    )
+                })
+                get("/db_test2", webResponseDb(dataSource) { dbSess ->
+                    JsonWebResponse(
+                        dbSess.single(queryOf("SELECT 1 AS example"), ::mapFromRow)
+                    )
+                })
+                get("/single_user", webResponseDb(dataSource) { dbSess ->
+                    JsonWebResponse(
+                        dbSess.single(
+                            queryOf("SELECT * FROM user_t"),
+                            ::mapFromRow
+                        )?.let(User::fromRow)
+                    )
+                })
             }
         }
 
@@ -125,7 +147,28 @@ class Main {
             }
         }
 
-        fun createAndMigrateDataSource(config: WebappConfig) =
+        private fun webResponseDb(
+            dataSource: DataSource,
+            handler: suspend PipelineContext<Unit, ApplicationCall>.(
+                dbSess: Session
+            ) -> WebResponse
+        ) = webResponse {
+            sessionOf(
+                dataSource,
+                returnGeneratedKey = true
+            ).use { dbSess ->
+                handler(dbSess)
+            }
+        }
+
+        private fun mapFromRow(row: Row): Map<String, Any?> {
+            return row.underlying.metaData
+                .let { (1..it.columnCount).map(it::getColumnName) }
+                .map { it to row.anyOrNull(it) }
+                .toMap()
+        }
+
+        private fun createAndMigrateDataSource(config: WebappConfig) =
             createDataSource(config).also(::migrateDataSource)
 
         private fun createDataSource(config: WebappConfig) =

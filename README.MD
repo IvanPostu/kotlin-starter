@@ -61,7 +61,7 @@ version = 5` to make Flyway rerun the migration from scratch next time on app st
 - **Manually Performing Migration**
   - Make manual changes
   - `UPDATE flyway_schema_history SET
-success = true WHERE version = 5`
+success = true WHERE version = 5` on startup, Flyway will think that the migration was already run
 
 ## API Usage
 
@@ -75,6 +75,12 @@ curl -i -X GET http://0.0.0.0:8081/json_test ; echo -e '\n'
 curl -i -X GET http://0.0.0.0:8081/json_test_with_header ; echo -e '\n'
 
 curl -i -X GET http://0.0.0.0:8081/err ; echo -e '\n'
+
+curl -i -X GET http://0.0.0.0:8081/db_test1 ; echo -e '\n'
+
+curl -i -X GET http://0.0.0.0:8081/db_test2 ; echo -e '\n'
+
+curl -i -X GET http://0.0.0.0:8081/single_user ; echo -e '\n'
 ```
 
 ## TODO
