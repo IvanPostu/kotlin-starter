@@ -27,7 +27,22 @@ when something is `null` or false, e.g. `var test = nullable ?: default`
 function as if it were a method defined on the class itself, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 - A lambda with receiver is a special kind of lambda where you can call methods and access properties of a receiver object directly inside the lambda, without specifying it explicitly, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 
+## API Usage
+
+```sh
+curl -i -X GET http://0.0.0.0:8081/ ; echo -e '\n'
+
+curl -i -X GET http://0.0.0.0:8081/param_test?foo=abc123 ; echo -e '\n'
+
+curl -i -X GET http://0.0.0.0:8081/json_test ; echo -e '\n'
+
+curl -i -X GET http://0.0.0.0:8081/json_test_with_header ; echo -e '\n'
+
+curl -i -X GET http://0.0.0.0:8081/err ; echo -e '\n'
+```
+
 ## References
 
 - Lilleaas, A. (2023). *Pro Kotlin Web Apps from Scratch*.
 - <https://kotlinlang.org/docs/sealed-classes.html>
+- <https://codezup.com/dockerizing-kotlin-application-step-by-step-guide/>

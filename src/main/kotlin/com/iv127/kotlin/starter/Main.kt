@@ -1,4 +1,4 @@
-package com.iv127.kotlin.starter;
+package com.iv127.kotlin.starter
 
 import com.typesafe.config.ConfigFactory
 import io.ktor.http.*
@@ -8,6 +8,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 import org.slf4j.LoggerFactory
 
 class Main {
@@ -37,10 +38,22 @@ class Main {
             }
 
             routing {
-                get("/") {
+                get("/", webResponse {
                     LOG.debug("request received")
                     TextWebResponse(getClicheMessage())
-                }
+                })
+                get("/param_test", webResponse {
+                    TextWebResponse(
+                        "The param is: ${call.request.queryParameters["foo"]}"
+                    )
+                })
+                get("/json_test", webResponse {
+                    JsonWebResponse(mapOf("foo" to "bar"))
+                })
+                get("/json_test_with_header", webResponse {
+                    JsonWebResponse(mapOf("foo" to "bar"))
+                        .header("X-Test-Header", "Just a test!")
+                })
                 get("/err") {
                     throw IllegalStateException("test exception")
                     call.respondText(getClicheMessage())
@@ -66,5 +79,36 @@ class Main {
                     )
                 }
 
+        private fun webResponse(
+            handler: suspend PipelineContext<Unit, ApplicationCall>.(
+            ) -> WebResponse
+        ): PipelineInterceptor<Unit, ApplicationCall> {
+            return {
+                val resp: WebResponse = this.handler()
+                for ((name, values) in resp.headers())
+                    for (value in values)
+                        call.response.header(name, value)
+                val statusCode = HttpStatusCode.fromValue(
+                    resp.statusCode
+                )
+                when (resp) {
+                    is TextWebResponse -> {
+                        call.respondText(
+                            text = resp.body,
+                            status = statusCode
+                        )
+                    }
+
+                    is JsonWebResponse -> {
+                        call.respond(
+                            KtorJsonWebResponse(
+                                body = resp.body,
+                                status = statusCode
+                            )
+                        )
+                    }
+                }
+            }
+        }
     }
 }
