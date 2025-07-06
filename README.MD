@@ -62,6 +62,10 @@ version = 5` to make Flyway rerun the migration from scratch next time on app st
   - `UPDATE flyway_schema_history SET
 success = true WHERE version = 5` on startup, Flyway will think that the migration was already run
 - Cast from `Long?` to `Long`, e.g. `return userId!!`, if userId is null it will throw NPE
+- > "black box tests"
+signifying that your tests have as little knowledge as possible about the inner workings of
+the system under test
+- testing hierarchy: unit, integration, system, acceptance (E2E)
 
 ## API Usage
 

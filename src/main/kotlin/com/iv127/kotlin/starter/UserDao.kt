@@ -1,5 +1,6 @@
 package com.iv127.kotlin.starter
 
+import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
 
@@ -29,6 +30,27 @@ class UserDao {
                 )
             )
             return userId!!
+        }
+
+        fun listUsers(dbSession: Session) =
+            dbSession
+                .list(queryOf("SELECT * FROM user_t"), ::mapFromRow)
+                .map(User::fromRow)
+
+        fun getUser(dbSession: Session, id: Long): User? {
+            return dbSession
+                .single(
+                    queryOf("SELECT * FROM user_t WHERE id = ?", id),
+                    ::mapFromRow
+                )
+                ?.let(User::fromRow)
+        }
+
+        private fun mapFromRow(row: Row): Map<String, Any?> {
+            return row.underlying.metaData
+                .let { (1..it.columnCount).map(it::getColumnName) }
+                .map { it to row.anyOrNull(it) }
+                .toMap()
         }
     }
 }
