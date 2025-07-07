@@ -1,2 +1,4 @@
+root = true
+
 [*.{kt,kts}]
 ij_kotlin_imports_layout=*,java.**,javax.**,kotlin.**,^ # default IntelliJ IDEA style, same as alphabetical, but with "java", "javax", "kotlin" and alias imports in the end of the imports list
