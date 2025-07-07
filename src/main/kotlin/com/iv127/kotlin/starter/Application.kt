@@ -1,5 +1,6 @@
 package com.iv127.kotlin.starter
 
+import com.iv127.kotlin.starter.ktor.webResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -7,13 +8,10 @@ import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.response.header
-import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
-import io.ktor.util.pipeline.PipelineInterceptor
 import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
@@ -46,7 +44,7 @@ class Application {
             }
 
             LOG.info("Application runs in the environment ${webappConfig.env}")
-            install(StatusPages) {
+            this.install(StatusPages) {
                 exception<Throwable> { call, cause ->
                     LOG.error("An unknown error occurred", cause)
                     call.respondText(
@@ -122,49 +120,6 @@ class Application {
         private fun getClicheMessage(): String {
             return "Hello, World! Class=" + Application::class.java
         }
-
-        private fun webResponse(
-            handler: suspend PipelineContext<Unit, ApplicationCall>.() -> WebResponse,
-        ): PipelineInterceptor<Unit, ApplicationCall> {
-            return {
-                val resp: WebResponse = this.handler()
-                for ((name, values) in resp.headers())
-                    for (value in values)
-                        call.response.header(name, value)
-                val statusCode =
-                    HttpStatusCode.fromValue(
-                        resp.statusCode,
-                    )
-                when (resp) {
-                    is TextWebResponse -> {
-                        call.respondText(
-                            text = resp.body,
-                            status = statusCode,
-                        )
-                    }
-
-                    is JsonWebResponse -> {
-                        call.respond(
-                            KtorJsonWebResponse(
-                                body = resp.body,
-                                status = statusCode,
-                            ),
-                        )
-                    }
-                }
-            }
-        }
-
-//        private fun webResponseTx(
-//            dataSource: DataSource,
-//            handler: suspend PipelineContext<Unit, ApplicationCall>.(
-//                dbSess: TransactionalSession
-//            ) -> WebResponse
-//        ) = webResponseDb(dataSource) { dbSess ->
-//            dbSess.transaction { txSess ->
-//                handler(txSess)
-//            }
-//        }
 
         private fun webResponseDb(
             dataSource: DataSource,

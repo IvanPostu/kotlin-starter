@@ -86,6 +86,9 @@ success = true WHERE version = 5` on startup, Flyway will think that the migrati
 signifying that your tests have as little knowledge as possible about the inner workings of
 the system under test
 - testing hierarchy: unit, integration, system, acceptance (E2E)
+- **Function type with receiver** is a function definition like `Application.() -> Unit`, where inside the body it is possible to use `this` of the Application type.
+- **TODO** The difference between kotlin.coroutines and kotlinx.
+coroutines
 
 141
 
@@ -111,13 +114,24 @@ curl -i -X GET http://0.0.0.0:8081/single_user ; echo -e '\n'
 
 ## TODO
 
-- add formatter
+- none
 
 ## Nested transaction using kotliquery
 
 Kotliquery doesn't support nested transactions, but it can be achieved through save-points
 
 ```kt
+private fun webResponseTx(
+    dataSource: DataSource,
+    handler: suspend PipelineContext<Unit, ApplicationCall>.(
+        dbSess: TransactionalSession
+    ) -> WebResponse
+) = webResponseDb(dataSource) { dbSess ->
+    dbSess.transaction { txSess ->
+        handler(txSess)
+    }
+}
+
 fun <A>dbSavePoint(dbSess: Session, body: () -> A): A {
     val sp = dbSess.connection.underlying.setSavepoint()
     return try {
@@ -140,6 +154,15 @@ fun test() {
   }
 }
 ```
+
+## Access modifiers (Java vs. Kotlin)
+
+| Java           | Kotlin         |
+|----------------|----------------|
+| public         | public (default) |
+| protected      | protected      |
+| (no modifier)  | internal       |
+| private        | private        |
 
 ## References
 

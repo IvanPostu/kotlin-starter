@@ -17,6 +17,13 @@ detekt {
     config.setFrom(files("detekt.yml"))
 }
 
+ktlint {
+//    version = "0.38.2"
+//    android = true // to use the Android Studio KtLint plugin style
+//    ignoreFailures = false
+//    reporters = "plain" // "plain", "checkstyle", "json", "html" or "visualstudio"
+}
+
 repositories {
     mavenCentral()
 }
