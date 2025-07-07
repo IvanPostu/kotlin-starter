@@ -15,6 +15,7 @@ A starter Kotlin project.
 ## Shell
 
 ```sh
+./gradlew :app:run
 ./gradlew run
 
 # automatically part of the check step
