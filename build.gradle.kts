@@ -4,16 +4,18 @@ plugins {
     kotlin("jvm")
 }
 
-detekt {
-    config.setFrom(files("detekt.yml"))
-}
-
 ktlint {
 }
 
 allprojects {
     repositories {
         mavenCentral()
+    }
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+    detekt {
+        config.setFrom(files("${rootProject.projectDir}/detekt.yml"))
     }
 }
 

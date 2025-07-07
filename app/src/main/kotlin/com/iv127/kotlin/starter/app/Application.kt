@@ -120,8 +120,8 @@ class Application {
 
         private fun getClicheMessage(): String {
             return "Hello, World! Class=" +
-                    Application::class.java + " message=" +
-                    ExampleAbc.greet("test")
+                Application::class.java + " message=" +
+                ExampleAbc.greet("test")
         }
 
         private fun webResponseDb(
