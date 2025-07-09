@@ -13,7 +13,6 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
-import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -92,7 +91,7 @@ class Application {
                     "/db_test1",
                     webResponseDb(dataSource) { dbSess ->
                         JsonWebResponse(
-                            dbSess.single(queryOf("SELECT 1"), Companion::mapFromRow),
+                            dbSess.single(queryOf("SELECT 1"), { mapFromRow(it) }),
                         )
                     },
                 )
@@ -100,7 +99,7 @@ class Application {
                     "/db_test2",
                     webResponseDb(dataSource) { dbSess ->
                         JsonWebResponse(
-                            dbSess.single(queryOf("SELECT 1 AS example"), Companion::mapFromRow),
+                            dbSess.single(queryOf("SELECT 1 AS example"), { mapFromRow(it) }),
                         )
                     },
                 )
@@ -110,7 +109,7 @@ class Application {
                         JsonWebResponse(
                             dbSess.single(
                                 queryOf("SELECT * FROM user_t"),
-                                Companion::mapFromRow,
+                                { mapFromRow(it) },
                             )?.let(User.Companion::fromRow),
                         )
                     },
@@ -136,13 +135,6 @@ class Application {
             ).use { dbSess ->
                 handler(dbSess)
             }
-        }
-
-        private fun mapFromRow(row: Row): Map<String, Any?> {
-            return row.underlying.metaData
-                .let { (1..it.columnCount).map(it::getColumnName) }
-                .map { it to row.anyOrNull(it) }
-                .toMap()
         }
     }
 

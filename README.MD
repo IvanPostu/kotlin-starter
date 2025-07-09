@@ -91,7 +91,7 @@ the system under test
 - **TODO** The difference between kotlin.coroutines and kotlinx.
 coroutines
 
-141
+143
 
 ## API Usage
 
@@ -111,7 +111,36 @@ curl -i -X GET http://0.0.0.0:8081/db_test1 ; echo -e '\n'
 curl -i -X GET http://0.0.0.0:8081/db_test2 ; echo -e '\n'
 
 curl -i -X GET http://0.0.0.0:8081/single_user ; echo -e '\n'
+
+# fake server
+curl -i -X GET http://0.0.0.0:9876/random_number ; echo -e '\n'
+curl -i -X GET http://0.0.0.0:9876/ping ; echo -e '\n'
+curl -i -X POST http://0.0.0.0:9876/reverse \
+  -H "Content-Type: text/plain" \
+  -d "This is the raw string body" \
+  ; echo -e '\n'
+
 ```
+
+## Observation
+
+- **Thread per request problem**: idle threads, e.g. a request thread is sleeping while it is waiting for a response from the database server or external service
+  - **context switch** happens and this thread gets CPU time, but because it is waiting, it will be wasted
+  - **thread scheduler** which performs **context switch**, gives CPU time even if the thread is waiting or sleeping
+
+- To fix the idle threads problem, Kotlin has a concept called **suspension**
+  - suspends execution of the
+code at specific point
+  - this thread is used for other tasks
+  - when the suspended code is ready to continue running, execution will
+continue, potentially on another thread
+
+**Conclusion**: Coroutine is a mechanism which let Kotlin
+runtime take control of thread management
+
+- **suspend** can be called from:
+  - coroutine context
+  - suspend function
 
 ## TODO
 

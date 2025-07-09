@@ -38,5 +38,5 @@ fun main() {
                 },
             )
         }
-    }.start(wait = false)
+    }.start(wait = true)
 }
