@@ -10,9 +10,11 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotliquery.Session
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -53,12 +55,15 @@ class HandleCoroutineTest {
         val queryOperation = async {
             val pingPong = client.get("http://localhost:9876/ping")
                 .bodyAsText()
-            dbSess.single(
-                queryOf(
-                    "SELECT count(*) c from user_t WHERE email != ?",
-                    pingPong
-                ),
-                { mapFromRow(it) })
+
+            withContext(Dispatchers.IO) {
+                dbSess.single(
+                    queryOf(
+                        "SELECT count(*) c from user_t WHERE email != ?",
+                        pingPong
+                    ),
+                    { mapFromRow(it) })
+            }
         }
         LOG.info(
             """

@@ -141,6 +141,12 @@ runtime take control of thread management
 - **suspend** can be called from:
   - coroutine context
   - suspend function
+- calling `.await()` on `Deferred<T>` type suspends execution, not block
+
+- Coroutines shouldn't contain blocking code
+- For blocking logic such as JDBC use `withContext(Dispatchers.IO)` which executes blocking logic in a separate thread pool
+
+- `kotlinx.coroutines` is a library which uses `kotlin.coroutines`, it introduces `suspend` which causes compile time error if you try to call suspend function from a non-coroutine context
 
 ## TODO
 
