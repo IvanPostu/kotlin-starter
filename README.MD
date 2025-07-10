@@ -88,29 +88,27 @@ signifying that your tests have as little knowledge as possible about the inner 
 the system under test
 - testing hierarchy: unit, integration, system, acceptance (E2E)
 - **Function type with receiver** is a function definition like `Application.() -> Unit`, where inside the body it is possible to use `this` of the Application type.
-- **TODO** The difference between kotlin.coroutines and kotlinx.
-coroutines
+- The difference between `kotlin.coroutines` and `kotlinx.
+coroutines`
+  - `kotlin.coroutines` low level kotlin api intended to work with async code and its state
+  - `kotlinx.coroutines` more rich functionality for async code built on top of `kotlin.coroutines`
+- Kotlin supports operator overloading, e.g. `h1 { text("Hello, World!") }` is the same as `h1 { +"Hello, World" }`
 
-161
+172
 
 ## API Usage
 
 ```sh
+# main app
 curl -i -X GET http://0.0.0.0:8081/ ; echo -e '\n'
-
 curl -i -X GET http://0.0.0.0:8081/param_test?foo=abc123 ; echo -e '\n'
-
 curl -i -X GET http://0.0.0.0:8081/json_test ; echo -e '\n'
-
 curl -i -X GET http://0.0.0.0:8081/json_test_with_header ; echo -e '\n'
-
 curl -i -X GET http://0.0.0.0:8081/err ; echo -e '\n'
-
 curl -i -X GET http://0.0.0.0:8081/db_test1 ; echo -e '\n'
-
 curl -i -X GET http://0.0.0.0:8081/db_test2 ; echo -e '\n'
-
 curl -i -X GET http://0.0.0.0:8081/single_user ; echo -e '\n'
+curl -i -X GET http://0.0.0.0:8081/html_test ; echo -e '\n'
 
 # fake server
 curl -i -X GET http://0.0.0.0:9876/random_number ; echo -e '\n'

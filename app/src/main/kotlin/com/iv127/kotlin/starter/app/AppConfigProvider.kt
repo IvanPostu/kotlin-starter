@@ -15,5 +15,6 @@ fun createAppConfig(env: EnvironmentType): WebappConfig =
                 dbUrl = it.getString("dbUrl"),
                 dbUser = it.getString("dbUser"),
                 dbPassword = it.getString("dbPassword"),
+                useFileSystemAssets = it.getBoolean("useFileSystemAssets"),
             )
         }

@@ -7,12 +7,21 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.html.respondHtml
+import io.ktor.server.http.content.files
+import io.ktor.server.http.content.resources
+import io.ktor.server.http.content.static
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
+import kotlinx.html.body
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.styleLink
+import kotlinx.html.title
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -55,6 +64,13 @@ class Application {
             }
 
             routing {
+                static("/") {
+                    if (webappConfig.useFileSystemAssets) {
+                        files("app/src/main/resources/public")
+                    } else {
+                        resources("public")
+                    }
+                }
                 get(
                     "/",
                     webResponse {
@@ -114,6 +130,17 @@ class Application {
                         )
                     },
                 )
+                get("/html_test") {
+                    call.respondHtml {
+                        head {
+                            title("Hello, World!")
+                            styleLink("/app.css")
+                        }
+                        body {
+                            h1 { +"Hello, World!" }
+                        }
+                    }
+                }
             }
         }
 
