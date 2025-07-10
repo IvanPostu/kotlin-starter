@@ -19,6 +19,7 @@ import kotliquery.Session
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import org.junit.jupiter.api.Disabled
 import org.slf4j.LoggerFactory
 import kotlin.test.Test
 
@@ -29,6 +30,7 @@ class HandleCoroutineTest {
         private val testDataSource = createAndMigrateDataSource(testAppConfig)
     }
 
+    @Disabled
     @Test
     fun testCoroutineHandle() {
         runBlocking {
@@ -42,28 +44,32 @@ class HandleCoroutineTest {
         dbSess: Session
     ) = coroutineScope {
         val client = HttpClient(CIO)
-        val randomNumberRequest = async {
-            client.get("http://localhost:9876/random_number")
-                .bodyAsText()
-        }
-        val reverseRequest = async {
-            client.post("http://localhost:9876/reverse") {
-                setBody(randomNumberRequest.await())
-            }.bodyAsText()
-        }
-        val queryOperation = async {
-            val pingPong = client.get("http://localhost:9876/ping")
-                .bodyAsText()
-
-            withContext(Dispatchers.IO) {
-                dbSess.single(
-                    queryOf(
-                        "SELECT count(*) c from user_t WHERE email != ?",
-                        pingPong
-                    ),
-                    { mapFromRow(it) })
+        val randomNumberRequest =
+            async {
+                client.get("http://localhost:9876/random_number")
+                    .bodyAsText()
             }
-        }
+        val reverseRequest =
+            async {
+                client.post("http://localhost:9876/reverse") {
+                    setBody(randomNumberRequest.await())
+                }.bodyAsText()
+            }
+        val queryOperation =
+            async {
+                val pingPong =
+                    client.get("http://localhost:9876/ping")
+                        .bodyAsText()
+
+                withContext(Dispatchers.IO) {
+                    dbSess.single(
+                        queryOf(
+                            "SELECT count(*) c from user_t WHERE email != ?",
+                            pingPong
+                        ),
+                        { mapFromRow(it) })
+                }
+            }
         LOG.info(
             """
 Random number: ${randomNumberRequest.await()}
@@ -73,18 +79,19 @@ Query: ${queryOperation.await()}
         )
     }
 
-    private suspend fun testTx(handler: suspend (dbSess: TransactionalSession) -> Unit) = coroutineScope {
-        sessionOf(
-            testDataSource,
-            returnGeneratedKey = true,
-        ).use { dbSess ->
-            dbSess.transaction { dbSessTx ->
-                try {
-                    handler(dbSessTx)
-                } finally {
-                    dbSessTx.connection.rollback()
+    private suspend fun testTx(handler: suspend (dbSess: TransactionalSession) -> Unit) =
+        coroutineScope {
+            sessionOf(
+                testDataSource,
+                returnGeneratedKey = true,
+            ).use { dbSess ->
+                dbSess.transaction { dbSessTx ->
+                    try {
+                        handler(dbSessTx)
+                    } finally {
+                        dbSessTx.connection.rollback()
+                    }
                 }
             }
         }
-    }
 }

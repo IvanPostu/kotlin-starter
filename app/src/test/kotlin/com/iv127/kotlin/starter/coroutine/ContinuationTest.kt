@@ -20,10 +20,11 @@ class ContinuationTest {
     @Test
     fun testContinuation() {
         runBlocking {
-            val cont = createContinuation()
-                .createCoroutineUnintercepted(
-                    Continuation(EmptyCoroutineContext, {})
-                )
+            val cont =
+                createContinuation()
+                    .createCoroutineUnintercepted(
+                        Continuation(EmptyCoroutineContext, {})
+                    )
             cont.resume(Unit)
 // a
             cont.resume(Unit)

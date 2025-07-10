@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 
 data class ValidationError(val error: String)
+
 data class MyUser(val email: String, val password: String)
 
 fun validateEmail(email: Any?): Either<ValidationError, String> {

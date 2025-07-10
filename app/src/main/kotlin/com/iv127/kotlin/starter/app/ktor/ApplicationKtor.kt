@@ -13,7 +13,7 @@ import io.ktor.server.response.respondText
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.PipelineInterceptor
 
-fun webResponse(handler: suspend PipelineContext<Unit, ApplicationCall>.() -> WebResponse): //
+fun webResponse(handler: suspend PipelineContext<Unit, ApplicationCall>.() -> WebResponse):
     PipelineInterceptor<Unit, ApplicationCall> {
     return {
         val resp: WebResponse = this.handler()

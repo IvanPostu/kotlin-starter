@@ -11,12 +11,13 @@ class CoroutinesUsageTest {
 
     @Test
     fun `test coroutine with delay`() {
-        val time = measureTimeMillis {
-            runBlocking {
-                val result = waitAndReturn(100L, "test")
-                assertEquals("test", result)
+        val time =
+            measureTimeMillis {
+                runBlocking {
+                    val result = waitAndReturn(100L, "test")
+                    assertEquals("test", result)
+                }
             }
-        }
         assertTrue(time >= 100L)
     }
 
