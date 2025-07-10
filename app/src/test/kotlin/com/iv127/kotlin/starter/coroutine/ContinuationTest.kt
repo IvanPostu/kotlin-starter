@@ -12,7 +12,10 @@ import kotlin.coroutines.resume
 import kotlin.test.Test
 
 class ContinuationTest {
-    private val LOG = LoggerFactory.getLogger(HandleCoroutineTest::class.java)
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(HandleCoroutineTest::class.java)
+    }
 
     @Test
     fun testContinuation() {
@@ -40,12 +43,12 @@ class ContinuationTest {
 
     fun createContinuation(): suspend () -> Unit {
         return {
-            println("a")
+            LOG.info("a")
             haltHere()
-            println("b")
-            println("c")
+            LOG.info("b")
+            LOG.info("c")
             haltHere()
-            println("d")
+            LOG.info("d")
         }
     }
 }

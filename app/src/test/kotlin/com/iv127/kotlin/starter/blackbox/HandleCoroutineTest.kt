@@ -23,9 +23,8 @@ import org.slf4j.LoggerFactory
 import kotlin.test.Test
 
 class HandleCoroutineTest {
-    private val LOG = LoggerFactory.getLogger(HandleCoroutineTest::class.java)
-
     companion object {
+        private val LOG = LoggerFactory.getLogger(HandleCoroutineTest::class.java)
         private val testAppConfig = createAppConfig(EnvironmentType.TEST)
         private val testDataSource = createAndMigrateDataSource(testAppConfig)
     }
@@ -34,12 +33,12 @@ class HandleCoroutineTest {
     fun testCoroutineHandle() {
         runBlocking {
             testTx { dbSess ->
-                handleCoroutineTest(dbSess)
+                handleCoroutine(dbSess)
             }
         }
     }
 
-    suspend fun handleCoroutineTest(
+    suspend fun handleCoroutine(
         dbSess: Session
     ) = coroutineScope {
         val client = HttpClient(CIO)
