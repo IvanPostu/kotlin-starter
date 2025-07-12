@@ -94,7 +94,7 @@ coroutines`
   - `kotlinx.coroutines` more rich functionality for async code built on top of `kotlin.coroutines`
 - Kotlin supports operator overloading, e.g. `h1 { text("Hello, World!") }` is the same as `h1 { +"Hello, World" }`
 
-172
+197
 
 ## API Usage
 
@@ -109,6 +109,10 @@ curl -i -X GET http://0.0.0.0:8081/db_test1 ; echo -e '\n'
 curl -i -X GET http://0.0.0.0:8081/db_test2 ; echo -e '\n'
 curl -i -X GET http://0.0.0.0:8081/single_user ; echo -e '\n'
 curl -i -X GET http://0.0.0.0:8081/html_test ; echo -e '\n'
+curl -i -X POST http://0.0.0.0:8081/test_json \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@gmail.com", "password": "test1234"}' \
+  ; echo -e '\n' 
 
 # fake server
 curl -i -X GET http://0.0.0.0:9876/random_number ; echo -e '\n'

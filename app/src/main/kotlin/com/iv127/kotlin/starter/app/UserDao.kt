@@ -38,10 +38,11 @@ fun createUser(
     passwordText: String,
     tosAccepted: Boolean = false,
 ): Long {
-    val hashedPassword: ByteArray = bcryptHasher.hash(
-        BCRYPT_DIFFICULTY_FACTOR,
-        passwordText.toByteArray(Charsets.UTF_8)
-    )
+    val hashedPassword: ByteArray =
+        bcryptHasher.hash(
+            BCRYPT_DIFFICULTY_FACTOR,
+            passwordText.toByteArray(Charsets.UTF_8)
+        )
     val userId =
         dbSession.updateAndReturnGeneratedKey(
             queryOf(

@@ -3,6 +3,9 @@ root = true
 [*.{kt,kts}]
 # default IntelliJ IDEA style, same as alphabetical, but with "java", "javax", "kotlin" and alias imports in the end of the imports list
 ij_kotlin_imports_layout = *, java.**, javax.**, kotlin.**, ^
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+ij_kotlin_packages_to_use_import_on_demand = unset
 ktlint_standard_no-consecutive-blank-lines = disabled
 ktlint_standard_trailing-comma-on-call-site = disabled
 ktlint_standard_curly-spacing = disabled

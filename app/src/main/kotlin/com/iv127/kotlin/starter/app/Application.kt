@@ -1,5 +1,7 @@
 package com.iv127.kotlin.starter.app
 
+import arrow.core.continuations.either
+import com.google.gson.Gson
 import com.iv127.kotlin.starter.app.ktor.webResponse
 import com.iv127.kotlin.starter.core.ExampleAbc
 import io.ktor.http.HttpStatusCode
@@ -20,6 +22,7 @@ import io.ktor.server.http.content.static
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receiveParameters
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -109,7 +112,6 @@ class Application {
             webappConfig: WebappConfig,
             dataSource: DataSource
         ) {
-
             dataSource.getConnection().use { conn ->
                 conn.createStatement().use { stmt ->
                     stmt.executeQuery("SELECT 1")
@@ -214,52 +216,62 @@ class Application {
                         }
                     }
                 }
-                get("/html_webresponse_test1", webResponse {
-                    HtmlWebResponse(AppLayout("Hello, world!").apply {
-                        pageBody {
-                            h1 {
-                                +"Hello, readers!"
-                            }
-                        }
-                    })
-                })
-                get("/html_webresponse_test2", webResponse {
-                    HtmlWebResponse(object : Template<HTML> {
-                        override fun HTML.apply() {
-                            head {
-                                title { +"Plain HTML here! " }
-                            }
-                            body {
-                                h1 { +"Very plan header" }
-                            }
-                        }
-                    })
-                })
-                get("/login", webResponse {
-                    HtmlWebResponse(AppLayout("Log in").apply {
-                        pageBody {
-                            form(method = FormMethod.post, action = "/login") {
-                                p {
-                                    label { +"E-mail" }
-                                    input(type = InputType.text, name = "username")
+                get(
+                    "/html_webresponse_test1",
+                    webResponse {
+                        HtmlWebResponse(
+                            AppLayout("Hello, world!").apply {
+                                pageBody {
+                                    h1 {
+                                        +"Hello, readers!"
+                                    }
                                 }
-                                p {
-                                    label { +"Password" }
-                                    input(type = InputType.password, name = "password")
-                                }
-                                button(type = ButtonType.submit) { +"Log in" }
-                            }
-                        }
+                            })
                     })
-                })
+                get(
+                    "/html_webresponse_test2",
+                    webResponse {
+                        HtmlWebResponse(
+                            object : Template<HTML> {
+                                override fun HTML.apply() {
+                                    head {
+                                        title { +"Plain HTML here! " }
+                                    }
+                                    body {
+                                        h1 { +"Very plan header" }
+                                    }
+                                }
+                            })
+                    })
+                get(
+                    "/login",
+                    webResponse {
+                        HtmlWebResponse(
+                            AppLayout("Log in").apply {
+                                pageBody {
+                                    form(method = FormMethod.post, action = "/login") {
+                                        p {
+                                            label { +"E-mail" }
+                                            input(type = InputType.text, name = "username")
+                                        }
+                                        p {
+                                            label { +"Password" }
+                                            input(type = InputType.password, name = "password")
+                                        }
+                                        button(type = ButtonType.submit) { +"Log in" }
+                                    }
+                                }
+                            })
+                    })
                 post("/login") {
                     sessionOf(dataSource).use { dbSess ->
                         val params = call.receiveParameters()
-                        val userId = authenticateUser(
-                            dbSess,
-                            params["username"]!!,
-                            params["password"]!!
-                        )
+                        val userId =
+                            authenticateUser(
+                                dbSess,
+                                params["username"]!!,
+                                params["password"]!!
+                            )
                         if (userId == null) {
                             call.respondRedirect("/login")
                         } else {
@@ -269,28 +281,54 @@ class Application {
                     }
                 }
                 authenticate("auth-session") {
-                    get("/secret", webResponseDb(dataSource) { dbSess ->
-                        val userSession = call.principal<UserSession>()!!
-                        val user = getUser(dbSess, userSession.userId)!!
-                        HtmlWebResponse(
-                            AppLayout("Welcome, ${user.email}").apply {
-                                pageBody {
-                                    h1 {
-                                        +"Hello there, ${user.email}"
-                                    }
-                                    p { +"You're logged in." }
-                                    p {
-                                        a(href = "/logout") { +"Log out" }
+                    get(
+                        "/secret",
+                        webResponseDb(dataSource) { dbSess ->
+                            val userSession = call.principal<UserSession>()!!
+                            val user = getUser(dbSess, userSession.userId)!!
+                            HtmlWebResponse(
+                                AppLayout("Welcome, ${user.email}").apply {
+                                    pageBody {
+                                        h1 {
+                                            +"Hello there, ${user.email}"
+                                        }
+                                        p { +"You're logged in." }
+                                        p {
+                                            a(href = "/logout") { +"Log out" }
+                                        }
                                     }
                                 }
-                            }
-                        )
-                    })
+                            )
+                        })
                     get("/logout") {
                         call.sessions.clear<UserSession>()
                         call.respondRedirect("/login")
                     }
                 }
+                post(
+                    "/test_json",
+                    webResponse {
+                        either<ValidationError, MyUser> {
+                            val input =
+                                Gson().fromJson(
+                                    call.receiveText(), Map::class.java
+                                )
+                            MyUser(
+                                email = validateEmail(input["email"]).bind(),
+                                password = validatePassword(input["password"]).bind()
+                            )
+                        }.fold(
+                            { err ->
+                                JsonWebResponse(
+                                    mapOf("error" to err.error),
+                                    statusCode = 422
+                                )
+                            },
+                            { user ->
+                                JsonWebResponse(mapOf("success" to true))
+                            }
+                        )
+                    })
             }
         }
 

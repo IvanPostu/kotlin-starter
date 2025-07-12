@@ -14,12 +14,14 @@ class AppLayout(
     val pageTitle: String? = null
 ) : Template<HTML> {
     val pageBody = Placeholder<BODY>()
+
     override fun HTML.apply() {
-        val pageTitlePrefix = if (pageTitle == null) {
-            ""
-        } else {
-            "${pageTitle} - "
-        }
+        val pageTitlePrefix =
+            if (pageTitle == null) {
+                ""
+            } else {
+                "$pageTitle - "
+            }
         head {
             title {
                 +"${pageTitlePrefix}KotlinBook"

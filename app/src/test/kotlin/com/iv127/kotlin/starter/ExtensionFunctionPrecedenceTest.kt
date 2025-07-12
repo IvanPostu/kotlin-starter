@@ -8,7 +8,7 @@ class ExtensionFunctionPrecedenceTest {
     class MyThing {
         @Suppress("detekt.FunctionOnlyReturningConstant")
         fun String.testMe(): String {
-            return "MyThing testMe";
+            return "MyThing testMe"
         }
     }
 

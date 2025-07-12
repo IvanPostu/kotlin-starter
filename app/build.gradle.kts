@@ -2,6 +2,7 @@ plugins {
     id("java")
     kotlin("jvm")
     id("application")
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 group = "com.iv127.kotlin.starter.app"
@@ -33,6 +34,7 @@ dependencies {
     implementation("at.favre.lib:bcrypt:0.9.0")
     implementation("io.ktor:ktor-server-auth:2.1.2")
     implementation("io.ktor:ktor-server-sessions:2.1.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     implementation(project(":core"))
 }
