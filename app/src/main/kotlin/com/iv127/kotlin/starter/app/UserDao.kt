@@ -1,7 +1,35 @@
 package com.iv127.kotlin.starter.app
 
+import at.favre.lib.crypto.bcrypt.BCrypt
 import kotliquery.Session
 import kotliquery.queryOf
+
+const val BCRYPT_DIFFICULTY_FACTOR = 10
+
+val bcryptHasher = BCrypt.withDefaults()
+val bcryptVerifier = BCrypt.verifyer()
+
+fun authenticateUser(
+    dbSession: Session,
+    email: String,
+    passwordText: String
+): Long? {
+    return dbSession.single(
+        queryOf("SELECT * FROM user_t WHERE email = ?", email),
+        ::mapFromRow
+    )?.let {
+        val pwHash = it["password_hash"] as ByteArray
+        if (bcryptVerifier.verify(
+                passwordText.toByteArray(Charsets.UTF_8),
+                pwHash
+            ).verified
+        ) {
+            return it["id"] as Long
+        } else {
+            return null
+        }
+    }
+}
 
 fun createUser(
     dbSession: Session,
@@ -10,6 +38,10 @@ fun createUser(
     passwordText: String,
     tosAccepted: Boolean = false,
 ): Long {
+    val hashedPassword: ByteArray = bcryptHasher.hash(
+        BCRYPT_DIFFICULTY_FACTOR,
+        passwordText.toByteArray(Charsets.UTF_8)
+    )
     val userId =
         dbSession.updateAndReturnGeneratedKey(
             queryOf(
@@ -22,9 +54,9 @@ fun createUser(
                     "email" to email,
                     "name" to name,
                     "tosAccepted" to tosAccepted,
-                    "passwordHash" to
-                        passwordText
-                            .toByteArray(Charsets.UTF_8),
+                    "passwordHash" to hashedPassword
+//                        passwordText
+//                            .toByteArray(Charsets.UTF_8),
                 ),
             ),
         )

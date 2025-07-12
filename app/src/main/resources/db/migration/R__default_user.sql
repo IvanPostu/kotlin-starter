@@ -1,5 +1,6 @@
-MERGE INTO user_t
-(email, password_hash, name, tos_accepted)
+MERGE INTO user_t (email, password_hash, name, tos_accepted)
 KEY (email)
 VALUES
-('iv127@gmail.com', '456def', 'Name Example', true);
+('testuser1@gmail.com',
+X'24326124313024535263552e7a5769784b77427a32684c65496c30652e59704d49306a5951665a2e37373469387a3236635530346e343863554c754b', -- 1234
+'Name Example', true);
