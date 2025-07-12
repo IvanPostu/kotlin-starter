@@ -74,9 +74,9 @@ class Application {
     companion object {
         private val LOG = LoggerFactory.getLogger(Application::class.java)
 
-        const val jwtAudience = "myApp"
-        const val jwtIssuer = "http://0.0.0.0:4207"
-        const val durationForTokenToLiveInDays = 30
+        private const val JWT_AUDIENCE = "myApp"
+        private const val JWT_ISSUER = "http://0.0.0.0:4207"
+        private const val JWT_TIME_TO_LIVE_IN_DAYS = 30
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -100,15 +100,16 @@ class Application {
                     verifier(
                         JWT
                             .require(Algorithm.HMAC256(appConfig.cookieSigningKey))
-                            .withAudience(jwtAudience)
-                            .withIssuer(jwtIssuer)
+                            .withAudience(JWT_AUDIENCE)
+                            .withIssuer(JWT_ISSUER)
                             .build()
                     )
                     validate { credential ->
-                        if (credential.payload.audience.contains(jwtAudience))
+                        if (credential.payload.audience.contains(JWT_AUDIENCE)) {
                             JWTPrincipal(credential.payload)
-                        else
+                        } else {
                             null
+                        }
                     }
                 }
             }
@@ -395,43 +396,48 @@ class Application {
                 post(
                     "/jwt_login",
                     webResponseDb(dataSource) { dbSess ->
-                        val input = Gson().fromJson(
-                            call.receiveText(), Map::class.java
-                        )
-                        val userId = authenticateUser(
-                            dbSess,
-                            input["username"] as String,
-                            input["password"] as String
-                        )
+                        val input =
+                            Gson().fromJson(
+                                call.receiveText(), Map::class.java
+                            )
+                        val userId =
+                            authenticateUser(
+                                dbSess,
+                                input["username"] as String,
+                                input["password"] as String
+                            )
                         if (userId == null) {
                             JsonWebResponse(
                                 mapOf("error" to "Invalid username and/or password"),
                                 statusCode = 403
                             )
                         } else {
-                            val token = JWT.create()
-                                .withAudience(jwtAudience)
-                                .withIssuer(jwtIssuer)
-                                .withClaim("userId", userId)
-                                .withExpiresAt(
-                                    Date.from(
-                                        LocalDateTime
-                                            .now()
-                                            .plusDays(durationForTokenToLiveInDays.toLong())
-                                            .toInstant(ZoneOffset.UTC)
+                            val token =
+                                JWT.create()
+                                    .withAudience(JWT_AUDIENCE)
+                                    .withIssuer(JWT_ISSUER)
+                                    .withClaim("userId", userId)
+                                    .withExpiresAt(
+                                        Date.from(
+                                            LocalDateTime
+                                                .now()
+                                                .plusDays(JWT_TIME_TO_LIVE_IN_DAYS.toLong())
+                                                .toInstant(ZoneOffset.UTC)
+                                        )
                                     )
-                                )
-                                .sign(Algorithm.HMAC256(webappConfig.cookieSigningKey))
+                                    .sign(Algorithm.HMAC256(webappConfig.cookieSigningKey))
                             JsonWebResponse(mapOf("token" to token))
                         }
                     })
                 authenticate("jwt-auth") {
-                    get("/jwt_secret", webResponseDb(dataSource) { dbSess ->
-                        val userSession = call.principal<JWTPrincipal>()!!
-                        val userId = userSession.getClaim("userId", Long::class)!!
-                        val user = getUser(dbSess, userId)!!
-                        JsonWebResponse(mapOf("hello" to user.email))
-                    })
+                    get(
+                        "/jwt_secret",
+                        webResponseDb(dataSource) { dbSess ->
+                            val userSession = call.principal<JWTPrincipal>()!!
+                            val userId = userSession.getClaim("userId", Long::class)!!
+                            val user = getUser(dbSess, userId)!!
+                            JsonWebResponse(mapOf("hello" to user.email))
+                        })
                 }
             }
         }
