@@ -35,6 +35,8 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:2.1.2")
     implementation("io.ktor:ktor-server-sessions:2.1.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("io.ktor:ktor-server-cors-jvm:2.1.2")
+    implementation("io.ktor:ktor-server-auth-jwt-jvm:2.1.2")
 
     implementation(project(":core"))
 }

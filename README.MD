@@ -1,5 +1,7 @@
 # Kotlin Starter
 
+213
+
 ## Description
 
 A starter Kotlin project.
@@ -94,8 +96,6 @@ coroutines`
   - `kotlinx.coroutines` more rich functionality for async code built on top of `kotlin.coroutines`
 - Kotlin supports operator overloading, e.g. `h1 { text("Hello, World!") }` is the same as `h1 { +"Hello, World" }`
 
-197
-
 ## API Usage
 
 ```sh
@@ -112,7 +112,13 @@ curl -i -X GET http://0.0.0.0:8081/html_test ; echo -e '\n'
 curl -i -X POST http://0.0.0.0:8081/test_json \
   -H "Content-Type: application/json" \
   -d '{"email": "test@gmail.com", "password": "test1234"}' \
+  ; echo -e '\n'
+curl -i -X POST http://0.0.0.0:8081/jwt_login \
+  -d '{"username": "testuser1@gmail.com", "password": "1234"}' \
   ; echo -e '\n' 
+curl -i -X GET http://0.0.0.0:8081/jwt_secret \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJteUFwcCIsImlzcyI6Imh0dHA6Ly8wLjAuMC4wOjQyMDciLCJleHAiOjE3NTQ5NTMxMzEsInVzZXJJZCI6MX0.l9-27G2eeqieL5ENkOvorasuIrMZ6wDr7hWPL_NwLFo" \
+  ; echo -e '\n'
 
 # fake server
 curl -i -X GET http://0.0.0.0:9876/random_number ; echo -e '\n'
@@ -149,6 +155,26 @@ runtime take control of thread management
 - For blocking logic such as JDBC use `withContext(Dispatchers.IO)` which executes blocking logic in a separate thread pool
 
 - `kotlinx.coroutines` is a library which uses `kotlin.coroutines`, it introduces `suspend` which causes compile time error if you try to call suspend function from a non-coroutine context
+
+- Cross origin request: When JavaScript performs a request to a different domain name, it first sends an
+OPTIONS request to that server. If that OPTIONS request responds with the correct CORS headers, the browser will
+continue and perform the actual request that was initiated. If not, an error will be raised.
+
+- Example of usage of login api:
+
+  ```js
+  fetch("/login", {
+    credentials: "include", // without this, it won’t receive and send any cookies alongside your request
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams({
+      username: ...,
+      password: ...
+    })
+  })
+  ```
 
 ## TODO
 
@@ -210,3 +236,4 @@ fun test() {
 - <https://flywaydb.org/>
 - <https://www.baeldung.com/kotlin/detekt-static-code-analysis>
 - <https://hofstede-matheus.medium.com/improve-code-quality-with-ktlint-detekt-and-git-hooks-d173722594e4>
+- <https://jwt.io/>

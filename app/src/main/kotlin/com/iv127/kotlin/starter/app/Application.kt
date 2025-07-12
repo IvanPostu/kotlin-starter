@@ -1,15 +1,21 @@
 package com.iv127.kotlin.starter.app
 
 import arrow.core.continuations.either
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.google.gson.Gson
 import com.iv127.kotlin.starter.app.ktor.webResponse
 import com.iv127.kotlin.starter.core.ExampleAbc
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.authentication
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
 import io.ktor.server.auth.session
 import io.ktor.server.engine.embeddedServer
@@ -18,8 +24,10 @@ import io.ktor.server.html.respondHtml
 import io.ktor.server.html.respondHtmlTemplate
 import io.ktor.server.http.content.files
 import io.ktor.server.http.content.resources
+import io.ktor.server.http.content.singlePageApplication
 import io.ktor.server.http.content.static
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.request.receiveText
@@ -56,12 +64,19 @@ import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.Date
 import javax.sql.DataSource
 import kotlin.time.Duration
 
 class Application {
     companion object {
         private val LOG = LoggerFactory.getLogger(Application::class.java)
+
+        const val jwtAudience = "myApp"
+        const val jwtIssuer = "http://0.0.0.0:4207"
+        const val durationForTokenToLiveInDays = 30
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -70,9 +85,33 @@ class Application {
             LOG.info("Configuration loaded successfully: {}{}", System.lineSeparator(), webappConfig)
             embeddedServer(factory = Netty, port = webappConfig.httpPort) {
                 val dataSource = createAndMigrateDataSource(webappConfig)
-                setUpKtorCookieSecurity(webappConfig)
+                // setUpKtorCookieSecurity(webappConfig)
+                setUpKtorJwtSecurity(webappConfig)
                 createKtorApplication(webappConfig, dataSource)
             }.start(wait = true)
+        }
+
+        fun io.ktor.server.application.Application.setUpKtorJwtSecurity(
+            appConfig: WebappConfig
+        ) {
+            authentication {
+                jwt("jwt-auth") {
+                    realm = "myApp"
+                    verifier(
+                        JWT
+                            .require(Algorithm.HMAC256(appConfig.cookieSigningKey))
+                            .withAudience(jwtAudience)
+                            .withIssuer(jwtIssuer)
+                            .build()
+                    )
+                    validate { credential ->
+                        if (credential.payload.audience.contains(jwtAudience))
+                            JWTPrincipal(credential.payload)
+                        else
+                            null
+                    }
+                }
+            }
         }
 
         fun io.ktor.server.application.Application.setUpKtorCookieSecurity(
@@ -91,9 +130,21 @@ class Application {
                     cookie.path = "/"
                     cookie.secure = appConfig.useSecureCookie
 
-                    // protects the cookie from cross-origin attacks, e.g. form from another site
-                    cookie.extensions["SameSite"] = "lax"
+                    // protects the cookie from cross-origin attacks, e.g. against form from another site
+                    // cookie.extensions["SameSite"] = "lax"
+
+                    // allow cookie transfer across different origins
+                    cookie.extensions["SameSite"] = "none"
                 }
+            }
+            install(CORS) {
+                allowMethod(HttpMethod.Put)
+                allowMethod(HttpMethod.Delete)
+                allowMethod(HttpMethod.Post)
+                allowMethod(HttpMethod.Patch)
+                allowHost("localhost:4207") // url of frontend application, e.ng webpack dev server
+                allowHost("www.myapp.com", schemes = listOf("https"))
+                allowCredentials = true
             }
             install(Authentication) {
                 session<UserSession>("auth-session") {
@@ -118,6 +169,8 @@ class Application {
                 }
             }
 
+
+
             LOG.info("Application runs in the environment ${webappConfig.env}")
             this.install(StatusPages) {
                 exception<Throwable> { call, cause ->
@@ -130,6 +183,16 @@ class Application {
             }
 
             routing {
+                singlePageApplication {
+                    if (webappConfig.useFileSystemAssets) {
+                        filesPath = "app/src/main/resources/public"
+                    } else {
+                        useResources = true
+                        filesPath = "public"
+                    }
+                    defaultPage = "index.html"
+                }
+
                 static("/") {
                     if (webappConfig.useFileSystemAssets) {
                         files("app/src/main/resources/public")
@@ -329,6 +392,47 @@ class Application {
                             }
                         )
                     })
+                post(
+                    "/jwt_login",
+                    webResponseDb(dataSource) { dbSess ->
+                        val input = Gson().fromJson(
+                            call.receiveText(), Map::class.java
+                        )
+                        val userId = authenticateUser(
+                            dbSess,
+                            input["username"] as String,
+                            input["password"] as String
+                        )
+                        if (userId == null) {
+                            JsonWebResponse(
+                                mapOf("error" to "Invalid username and/or password"),
+                                statusCode = 403
+                            )
+                        } else {
+                            val token = JWT.create()
+                                .withAudience(jwtAudience)
+                                .withIssuer(jwtIssuer)
+                                .withClaim("userId", userId)
+                                .withExpiresAt(
+                                    Date.from(
+                                        LocalDateTime
+                                            .now()
+                                            .plusDays(durationForTokenToLiveInDays.toLong())
+                                            .toInstant(ZoneOffset.UTC)
+                                    )
+                                )
+                                .sign(Algorithm.HMAC256(webappConfig.cookieSigningKey))
+                            JsonWebResponse(mapOf("token" to token))
+                        }
+                    })
+                authenticate("jwt-auth") {
+                    get("/jwt_secret", webResponseDb(dataSource) { dbSess ->
+                        val userSession = call.principal<JWTPrincipal>()!!
+                        val userId = userSession.getClaim("userId", Long::class)!!
+                        val user = getUser(dbSess, userId)!!
+                        JsonWebResponse(mapOf("hello" to user.email))
+                    })
+                }
             }
         }
 
