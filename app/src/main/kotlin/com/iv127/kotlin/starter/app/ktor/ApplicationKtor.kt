@@ -1,5 +1,6 @@
 package com.iv127.kotlin.starter.app.ktor
 
+import com.iv127.kotlin.starter.app.HtmlWebResponse
 import com.iv127.kotlin.starter.app.JsonWebResponse
 import com.iv127.kotlin.starter.app.KtorJsonWebResponse
 import com.iv127.kotlin.starter.app.TextWebResponse
@@ -7,6 +8,7 @@ import com.iv127.kotlin.starter.app.WebResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
+import io.ktor.server.html.respondHtml
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -39,6 +41,12 @@ fun webResponse(handler: suspend PipelineContext<Unit, ApplicationCall>.() -> We
                         status = statusCode,
                     ),
                 )
+            }
+
+            is HtmlWebResponse -> {
+                call.respondHtml(statusCode) {
+                    with(resp.body) { apply() }
+                }
             }
         }
     }

@@ -7,7 +7,9 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.html.Template
 import io.ktor.server.html.respondHtml
+import io.ktor.server.html.respondHtmlTemplate
 import io.ktor.server.http.content.files
 import io.ktor.server.http.content.resources
 import io.ktor.server.http.content.static
@@ -17,6 +19,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
+import kotlinx.html.HTML
 import kotlinx.html.body
 import kotlinx.html.h1
 import kotlinx.html.head
@@ -141,6 +144,36 @@ class Application {
                         }
                     }
                 }
+                get("/html_template_test") {
+                    call.respondHtmlTemplate(AppLayout("Hello, world!")) {
+                        pageBody {
+                            h1 {
+                                +"Hello, World!"
+                            }
+                        }
+                    }
+                }
+                get("/html_webresponse_test1", webResponse {
+                    HtmlWebResponse(AppLayout("Hello, world!").apply {
+                        pageBody {
+                            h1 {
+                                +"Hello, readers!"
+                            }
+                        }
+                    })
+                })
+                get("/html_webresponse_test2", webResponse {
+                    HtmlWebResponse(object : Template<HTML> {
+                        override fun HTML.apply() {
+                            head {
+                                title { +"Plain HTML here! " }
+                            }
+                            body {
+                                h1 { +"Very plan header" }
+                            }
+                        }
+                    })
+                })
             }
         }
 
