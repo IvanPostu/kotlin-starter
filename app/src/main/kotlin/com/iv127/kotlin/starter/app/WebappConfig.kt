@@ -9,7 +9,10 @@ data class WebappConfig(
     val dbUser: String,
     val dbPassword: String,
     val dbUrl: String,
-    val useFileSystemAssets: Boolean
+    val useFileSystemAssets: Boolean,
+    val cookieEncryptionKey: String,
+    val cookieSigningKey: String,
+    val useSecureCookie: Boolean,
 ) {
     override fun toString(): String {
         val secretsRegex =

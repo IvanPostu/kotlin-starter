@@ -6,6 +6,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
+import io.ktor.server.auth.session
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.html.Template
 import io.ktor.server.html.respondHtml
@@ -15,14 +19,34 @@ import io.ktor.server.http.content.resources
 import io.ktor.server.http.content.static
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import io.ktor.server.sessions.SessionTransportTransformerEncrypt
+import io.ktor.server.sessions.Sessions
+import io.ktor.server.sessions.clear
+import io.ktor.server.sessions.cookie
+import io.ktor.server.sessions.maxAge
+import io.ktor.server.sessions.sessions
+import io.ktor.server.sessions.set
+import io.ktor.util.hex
 import io.ktor.util.pipeline.PipelineContext
+import kotlinx.html.ButtonType
+import kotlinx.html.FormMethod
 import kotlinx.html.HTML
+import kotlinx.html.InputType
+import kotlinx.html.a
 import kotlinx.html.body
+import kotlinx.html.button
+import kotlinx.html.form
 import kotlinx.html.h1
 import kotlinx.html.head
+import kotlinx.html.input
+import kotlinx.html.label
+import kotlinx.html.p
 import kotlinx.html.styleLink
 import kotlinx.html.title
 import kotliquery.Session
@@ -30,6 +54,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+import kotlin.time.Duration
 
 class Application {
     companion object {
@@ -41,13 +66,49 @@ class Application {
             val webappConfig = createAppConfig(env)
             LOG.info("Configuration loaded successfully: {}{}", System.lineSeparator(), webappConfig)
             embeddedServer(factory = Netty, port = webappConfig.httpPort) {
-                createKtorApplication(webappConfig)
+                val dataSource = createAndMigrateDataSource(webappConfig)
+                setUpKtorCookieSecurity(webappConfig)
+                createKtorApplication(webappConfig, dataSource)
             }.start(wait = true)
         }
 
+        fun io.ktor.server.application.Application.setUpKtorCookieSecurity(
+            appConfig: WebappConfig
+        ) {
+            install(Sessions) {
+                cookie<UserSession>("user-session") {
+                    transform(
+                        SessionTransportTransformerEncrypt(
+                            hex(appConfig.cookieEncryptionKey),
+                            hex(appConfig.cookieSigningKey)
+                        )
+                    )
+                    cookie.maxAge = Duration.parse("30d")
+                    cookie.httpOnly = true
+                    cookie.path = "/"
+                    cookie.secure = appConfig.useSecureCookie
+
+                    // protects the cookie from cross-origin attacks, e.g. form from another site
+                    cookie.extensions["SameSite"] = "lax"
+                }
+            }
+            install(Authentication) {
+                session<UserSession>("auth-session") {
+                    validate { session ->
+                        session
+                    }
+                    challenge {
+                        call.respondRedirect("/login")
+                    }
+                }
+            }
+        }
+
         @Suppress("detekt.LongMethod")
-        private fun io.ktor.server.application.Application.createKtorApplication(webappConfig: WebappConfig) {
-            val dataSource = createAndMigrateDataSource(webappConfig)
+        fun io.ktor.server.application.Application.createKtorApplication(
+            webappConfig: WebappConfig,
+            dataSource: DataSource
+        ) {
 
             dataSource.getConnection().use { conn ->
                 conn.createStatement().use { stmt ->
@@ -174,6 +235,62 @@ class Application {
                         }
                     })
                 })
+                get("/login", webResponse {
+                    HtmlWebResponse(AppLayout("Log in").apply {
+                        pageBody {
+                            form(method = FormMethod.post, action = "/login") {
+                                p {
+                                    label { +"E-mail" }
+                                    input(type = InputType.text, name = "username")
+                                }
+                                p {
+                                    label { +"Password" }
+                                    input(type = InputType.password, name = "password")
+                                }
+                                button(type = ButtonType.submit) { +"Log in" }
+                            }
+                        }
+                    })
+                })
+                post("/login") {
+                    sessionOf(dataSource).use { dbSess ->
+                        val params = call.receiveParameters()
+                        val userId = authenticateUser(
+                            dbSess,
+                            params["username"]!!,
+                            params["password"]!!
+                        )
+                        if (userId == null) {
+                            call.respondRedirect("/login")
+                        } else {
+                            call.sessions.set(UserSession(userId = userId))
+                            call.respondRedirect("/secret")
+                        }
+                    }
+                }
+                authenticate("auth-session") {
+                    get("/secret", webResponseDb(dataSource) { dbSess ->
+                        val userSession = call.principal<UserSession>()!!
+                        val user = getUser(dbSess, userSession.userId)!!
+                        HtmlWebResponse(
+                            AppLayout("Welcome, ${user.email}").apply {
+                                pageBody {
+                                    h1 {
+                                        +"Hello there, ${user.email}"
+                                    }
+                                    p { +"You're logged in." }
+                                    p {
+                                        a(href = "/logout") { +"Log out" }
+                                    }
+                                }
+                            }
+                        )
+                    })
+                    get("/logout") {
+                        call.sessions.clear<UserSession>()
+                        call.respondRedirect("/login")
+                    }
+                }
             }
         }
 

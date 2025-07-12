@@ -16,5 +16,8 @@ fun createAppConfig(env: EnvironmentType): WebappConfig =
                 dbUser = it.getString("dbUser"),
                 dbPassword = it.getString("dbPassword"),
                 useFileSystemAssets = it.getBoolean("useFileSystemAssets"),
+                cookieEncryptionKey = it.getString("cookieEncryptionKey"),
+                cookieSigningKey = it.getString("cookieSigningKey"),
+                useSecureCookie = it.getBoolean("useSecureCookie"),
             )
         }
