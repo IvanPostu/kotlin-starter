@@ -25,6 +25,16 @@ A starter Kotlin project.
 
 ./gradlew ktlintFormat
 ./gradlew ktlintCheck
+
+# setup env vars
+- Set env variable:
+$Env:KOTLINBOOK_ENV = production # windows
+export KOTLINBOOK_ENV production # linux
+
+docker build -f Dockerfile -t kotlinapp:latest .
+docker run -p 9000:8081 --name kotlinapp kotlinapp:latest
+docker run -p 9000:8081 --restart=always -d --name kotlinapp kotlinapp:latest
+docker rm -f kotlinapp
 ```
 
 ## Info
@@ -178,7 +188,11 @@ continue and perform the actual request that was initiated. If not, an error wil
 
 ## TODO
 
-- none
+- Jib for layered docker images - <https://github.com/GoogleContainerTools/jib>
+
+- manage secrets in k8s https://github.com/jkroepke/helm-secretsu
+
+- increase severity for rules in `.editorconfig`
 
 ## Nested transaction using kotliquery
 
