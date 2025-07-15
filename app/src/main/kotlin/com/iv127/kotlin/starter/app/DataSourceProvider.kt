@@ -6,14 +6,7 @@ import javax.sql.DataSource
 
 fun createAndMigrateDataSource(config: WebappConfig) = createDataSource(config).also(::migrateDataSource)
 
-private fun createDataSource(config: WebappConfig) =
-    HikariDataSource().apply {
-        jdbcUrl = config.dbUrl
-        username = config.dbUser
-        password = config.dbPassword
-    }
-
-private fun migrateDataSource(dataSource: DataSource) {
+fun migrateDataSource(dataSource: DataSource) {
     Flyway.configure()
         .dataSource(dataSource)
         .locations("db/migration")
@@ -21,3 +14,11 @@ private fun migrateDataSource(dataSource: DataSource) {
         .load()
         .migrate()
 }
+
+private fun createDataSource(config: WebappConfig) =
+    HikariDataSource().apply {
+        jdbcUrl = config.dbUrl
+        username = config.dbUser
+        password = config.dbPassword
+    }
+

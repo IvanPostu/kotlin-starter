@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-213
+261
 
 ## Description
 
@@ -112,6 +112,7 @@ coroutines`
 - GraalVM, Kotlin/JS, and Kotlin Native
   - Pros: startup time (no java runtime load on startup)
   - Cons: java libraries such as `Hikari Connection Pool` can not work
+- If a `lateinit var` is accessed before it has been set, Kotlin will immediately throw a `kotlin.UninitializedPropertyAccessException`
 
 ## API Usage
 

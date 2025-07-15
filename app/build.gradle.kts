@@ -42,6 +42,8 @@ dependencies {
     // aws lambda lib (instead of ktor)
     // implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
 
+    implementation("org.springframework:spring-context:5.3.23")
+
     implementation(project(":core"))
 }
 
