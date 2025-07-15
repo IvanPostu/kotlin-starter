@@ -39,6 +39,9 @@ dependencies {
     implementation("io.ktor:ktor-server-cors-jvm:2.1.2")
     implementation("io.ktor:ktor-server-auth-jwt-jvm:2.1.2")
 
+    // aws lambda lib (instead of ktor)
+    // implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
+
     implementation(project(":core"))
 }
 

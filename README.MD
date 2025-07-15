@@ -105,6 +105,13 @@ coroutines`
   - `kotlin.coroutines` low level kotlin api intended to work with async code and its state
   - `kotlinx.coroutines` more rich functionality for async code built on top of `kotlin.coroutines`
 - Kotlin supports operator overloading, e.g. `h1 { text("Hello, World!") }` is the same as `h1 { +"Hello, World" }`
+- AWS Lambda Handlers:
+  - P228 example of AWS Lambda handler
+  - P241 example of AWS Lambda handler, more sophisticated example
+  - P244 optimize lambda function
+- GraalVM, Kotlin/JS, and Kotlin Native
+  - Pros: startup time (no java runtime load on startup)
+  - Cons: java libraries such as `Hikari Connection Pool` can not work
 
 ## API Usage
 
@@ -186,11 +193,24 @@ continue and perform the actual request that was initiated. If not, an error wil
   })
   ```
 
+- Serverless - cloud computing model where the main unit is a handler or function, a piece that has logic which takes data, process it and returns as a result
+  - (like AWS Lambda, Azure Functions, Google Cloud Functions)
+  - No server management & automatic scaling
+  - Limited execution time
+  - **initialization**/**execution**
+  - cost is only related to **execution** time
+  - **cold**/**warm** start
+
+- Java optimization (disable JIT)
+  - set the environment variable `JAVA_TOOL_OPTIONS` to
+-XX:+TieredCompilation -XX:TieredStopAtLevel=1, which disables tiered
+compilation
+
 ## TODO
 
 - Jib for layered docker images - <https://github.com/GoogleContainerTools/jib>
 
-- manage secrets in k8s https://github.com/jkroepke/helm-secretsu
+- manage secrets in k8s <https://github.com/jkroepke/helm-secretsu>
 
 - increase severity for rules in `.editorconfig`
 
