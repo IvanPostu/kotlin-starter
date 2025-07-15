@@ -207,6 +207,10 @@ continue and perform the actual request that was initiated. If not, an error wil
 -XX:+TieredCompilation -XX:TieredStopAtLevel=1, which disables tiered
 compilation
 
+- Spring Security requires the servlet specification because it is basically a servlet filter
+
+- Netty doesn't support the servlet specification, so because of it I am using jetty
+
 ## TODO
 
 - Jib for layered docker images - <https://github.com/GoogleContainerTools/jib>
