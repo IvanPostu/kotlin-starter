@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-261
+277
 
 ## Description
 
@@ -113,6 +113,10 @@ coroutines`
   - Pros: startup time (no java runtime load on startup)
   - Cons: java libraries such as `Hikari Connection Pool` can not work
 - If a `lateinit var` is accessed before it has been set, Kotlin will immediately throw a `kotlin.UninitializedPropertyAccessException`
+- Wiring up Spring Security in the servlet environment requires three things:
+  - role hierarchy,
+  - Spring Security web application context
+  - Spring Security filter that’s mapped to the servlet.
 
 ## API Usage
 

@@ -6,6 +6,7 @@ import com.iv127.kotlin.starter.app.EnvironmentType
 import com.iv127.kotlin.starter.app.WebappConfig
 import com.iv127.kotlin.starter.app.createAndMigrateDataSource
 import com.iv127.kotlin.starter.app.createAppConfig
+import com.iv127.kotlin.starter.app.spring.security.WebappSecurityConfig
 import io.ktor.server.application.ApplicationStarting
 import io.ktor.server.engine.BaseApplicationResponse
 import io.ktor.server.engine.applicationEngineEnvironment
@@ -18,6 +19,11 @@ import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.servlet.ListenerHolder
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.support.DefaultListableBeanFactory
+import org.springframework.context.annotation.AnnotatedBeanDefinitionReader
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl
+import org.springframework.web.context.support.AbstractRefreshableWebApplicationContext
+import org.springframework.web.filter.DelegatingFilterProxy
 import javax.servlet.ServletContextEvent
 import javax.servlet.ServletContextListener
 import javax.servlet.annotation.WebListener
@@ -94,6 +100,41 @@ class BootstrapWebApp : ServletContextListener {
             ServletApplicationEngine::class.java
         ).apply {
             addMapping("/")
+        }
+
+        LOG.debug("Setting up Spring Security")
+        val roleHierarchy = """
+ROLE_ADMIN > ROLE_USER
+"""
+        val wac = object : AbstractRefreshableWebApplicationContext() {
+            override fun loadBeanDefinitions(
+                beanFactory: DefaultListableBeanFactory
+            ) {
+                beanFactory.registerSingleton(
+                    "dataSource",
+                    dataSource
+                )
+                beanFactory.registerSingleton(
+                    "rememberMeKey",
+                    "asdf"
+                )
+                beanFactory.registerSingleton(
+                    "roleHierarchy",
+                    RoleHierarchyImpl().apply {
+                        setHierarchy(roleHierarchy)
+                    }
+                )
+                AnnotatedBeanDefinitionReader(beanFactory)
+                    .register(WebappSecurityConfig::class.java)
+            }
+        }
+
+        wac.servletContext = ctx
+        ctx.addFilter(
+            "springSecurityFilterChain",
+            DelegatingFilterProxy("springSecurityFilterChain", wac)
+        ).apply {
+            addMappingForServletNames(null, false, "ktorServlet")
         }
     }
 
