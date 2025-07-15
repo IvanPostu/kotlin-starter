@@ -12,7 +12,6 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.authentication
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
@@ -29,6 +28,7 @@ import io.ktor.server.http.content.static
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondRedirect
@@ -36,6 +36,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import io.ktor.server.servlet.javaSecurityPrincipal
 import io.ktor.server.sessions.SessionTransportTransformerEncrypt
 import io.ktor.server.sessions.Sessions
 import io.ktor.server.sessions.clear
@@ -86,7 +87,7 @@ class Application {
             LOG.info("Configuration loaded successfully: {}{}", System.lineSeparator(), webappConfig)
             embeddedServer(factory = Netty, port = webappConfig.httpPort) {
                 val dataSource = createAndMigrateDataSource(webappConfig)
-                // setUpKtorCookieSecurity(webappConfig)
+                setUpKtorCookieSecurity(webappConfig)
                 setUpKtorJwtSecurity(webappConfig)
                 createKtorApplication(webappConfig, dataSource)
             }.start(wait = true)
@@ -205,9 +206,15 @@ class Application {
                 get(
                     "/",
                     webResponse {
-                        val authDetails = SecurityContextHolder.getContext().authentication.toString()
+                        val request: ApplicationRequest = call.request
+                        val authAsyncSafe = request.javaSecurityPrincipal
+                        val authAsyncUnsafeGottenFromThreadLocal = SecurityContextHolder.getContext().authentication
+                        LOG.debug(
+                            "authAsyncSafe==authAsyncUnsafeGottenFromThreadLocal is {}, is null={}",
+                            authAsyncSafe == authAsyncUnsafeGottenFromThreadLocal, authAsyncSafe == null
+                        )
                         LOG.debug("request received")
-                        TextWebResponse(getClicheMessage() + " \nby:" + authDetails)
+                        TextWebResponse(getClicheMessage() + " \nby:" + authAsyncSafe.toString())
                     },
                 )
                 get(
@@ -346,31 +353,6 @@ class Application {
                         }
                     }
                 }
-                authenticate("auth-session") {
-                    get(
-                        "/secret",
-                        webResponseDb(dataSource) { dbSess ->
-                            val userSession = call.principal<UserSession>()!!
-                            val user = getUser(dbSess, userSession.userId)!!
-                            HtmlWebResponse(
-                                AppLayout("Welcome, ${user.email}").apply {
-                                    pageBody {
-                                        h1 {
-                                            +"Hello there, ${user.email}"
-                                        }
-                                        p { +"You're logged in." }
-                                        p {
-                                            a(href = "/logout") { +"Log out" }
-                                        }
-                                    }
-                                }
-                            )
-                        })
-                    get("/logout") {
-                        call.sessions.clear<UserSession>()
-                        call.respondRedirect("/login")
-                    }
-                }
                 post(
                     "/test_json",
                     webResponse {
@@ -431,16 +413,44 @@ class Application {
                             JsonWebResponse(mapOf("token" to token))
                         }
                     })
-                authenticate("jwt-auth") {
-                    get(
-                        "/jwt_secret",
-                        webResponseDb(dataSource) { dbSess ->
-                            val userSession = call.principal<JWTPrincipal>()!!
-                            val userId = userSession.getClaim("userId", Long::class)!!
-                            val user = getUser(dbSess, userId)!!
-                            JsonWebResponse(mapOf("hello" to user.email))
-                        })
+
+                // not compatible with Spring Security
+//                this.authenticate("auth-session") { // io.ktor.server.auth.authenticate
+                get(
+                    "/secret",
+                    webResponseDb(dataSource) { dbSess ->
+                        val userSession = call.principal<UserSession>()!!
+                        val user = getUser(dbSess, userSession.userId)!!
+                        HtmlWebResponse(
+                            AppLayout("Welcome, ${user.email}").apply {
+                                pageBody {
+                                    h1 {
+                                        +"Hello there, ${user.email}"
+                                    }
+                                    p { +"You're logged in." }
+                                    p {
+                                        a(href = "/logout") { +"Log out" }
+                                    }
+                                }
+                            }
+                        )
+                    })
+                get("/logout") {
+                    call.sessions.clear<UserSession>()
+                    call.respondRedirect("/login")
                 }
+//                }
+
+//                this.authenticate("jwt-auth") {// io.ktor.server.auth.authenticate
+                get(
+                    "/jwt_secret",
+                    webResponseDb(dataSource) { dbSess ->
+                        val userSession = call.principal<JWTPrincipal>()!!
+                        val userId = userSession.getClaim("userId", Long::class)!!
+                        val user = getUser(dbSess, userId)!!
+                        JsonWebResponse(mapOf("hello" to user.email))
+                    })
+//                }
             }
         }
 

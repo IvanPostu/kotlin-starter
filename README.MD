@@ -215,6 +215,10 @@ compilation
 
 - Netty doesn't support the servlet specification, so because of it I am using jetty
 
+- Authentication management in Ktor handlers
+  - best option, coroutine compatible, `request.javaSecurityPrincipal`
+  - thread local approach `SecurityContextHolder.getContext().authentication`, incompatible with coroutines and async code
+
 ## TODO
 
 - Jib for layered docker images - <https://github.com/GoogleContainerTools/jib>
