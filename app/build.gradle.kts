@@ -52,6 +52,10 @@ dependencies {
     implementation("org.springframework.security:spring-security-web:5.7.3")
     implementation("org.springframework.security:spring-security-config:5.7.3")
 
+    // java analogue of ktor
+    implementation("io.jooby:jooby:2.16.1")
+    implementation("io.jooby:jooby-netty:2.16.1")
+
     implementation(project(":core"))
 }
 

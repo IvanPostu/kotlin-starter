@@ -9,6 +9,16 @@ const val BCRYPT_DIFFICULTY_FACTOR = 10
 val bcryptHasher = BCrypt.withDefaults()
 val bcryptVerifier = BCrypt.verifyer()
 
+fun findUser(
+    dbSession: Session,
+    email: String
+): User? {
+    return dbSession.single(
+        queryOf("SELECT * FROM user_t WHERE email = ?", email),
+        ::mapFromRow
+    )?.let(User.Companion::fromRow)
+}
+
 fun authenticateUser(
     dbSession: Session,
     email: String,

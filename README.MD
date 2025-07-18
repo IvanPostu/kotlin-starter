@@ -170,6 +170,7 @@ things it cannot infer on its own, but are nevertheless true statements, see `co
 ```sh
 # main app
 curl -i -X GET http://0.0.0.0:8081/ ; echo -e '\n'
+curl -i -X GET http://0.0.0.0:8081/public/app.css ; echo -e '\n'
 curl -i -X GET http://0.0.0.0:8081/param_test?foo=abc123 ; echo -e '\n'
 curl -i -X GET http://0.0.0.0:8081/json_test ; echo -e '\n'
 curl -i -X GET http://0.0.0.0:8081/json_test_with_header ; echo -e '\n'
@@ -195,6 +196,12 @@ curl -i -X GET http://0.0.0.0:9876/ping ; echo -e '\n'
 curl -i -X POST http://0.0.0.0:9876/reverse \
   -H "Content-Type: text/plain" \
   -d "This is the raw string body" \
+  ; echo -e '\n'
+
+# jooby server
+curl -i -X POST http://0.0.0.0:8081/db_test \
+  -H "Content-Type: text/plain" \
+  -d '{"email": "testuser1@gmail.com"}' \
   ; echo -e '\n'
 
 ```
