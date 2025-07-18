@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-277
+291
 
 ## Description
 
@@ -43,7 +43,7 @@ docker rm -f kotlinapp
 - If the main method isn't inside a class, the `Kt` suffix is required, e.g., `mainClass.set("com.iv127.kotlin.starter.MainKt");` where `Main` is the name of the source file. Otherwise, if the `main` method is inside the `Main` class, then `mainClass.set("com.iv127.kotlin.starter.Main")`
 - run via gradle: `./gradlew run` which will use `main` defined in `application`, see `build.gradle.kts`
 - **Platform type** - type that potentially can be null, but bypasses compile-time null-check, e.g. calling java method that returns ref to an object
-  - Platform types essentially mean “I’ll allow you to pass this thing, which might be
+  - Platform types essentially mean “I'll allow you to pass this thing, which might be
 null, to a non-nullable type.”
   - **Kotlin will fail early here as well. Kotlin adds runtime checks to all
 variable and property assignments where the type is non-nullable.** Kotlin will throw an error on assignment, so in the end, the variable will indeed be non-nullable.
@@ -63,7 +63,7 @@ when something is `null` or false, e.g. `var test = nullable ?: default`
 function as if it were a method defined on the class itself, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 - A lambda with receiver is a special kind of lambda where you can call methods and access properties of a receiver object directly inside the lambda, without specifying it explicitly, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 - > benchmarks and real-world
-experience have shown that in some cases, you’ll get more performance out of your
+experience have shown that in some cases, you'll get more performance out of your
 database if you limit the maximum allowed number of simultaneous connections to
 about half the maximum of what the database supports*
 - `javax.sql.DataSource` is an abstraction over connection pool
@@ -116,7 +116,29 @@ coroutines`
 - Wiring up Spring Security in the servlet environment requires three things:
   - role hierarchy,
   - Spring Security web application context
-  - Spring Security filter that’s mapped to the servlet.
+  - Spring Security filter that's mapped to the servlet.
+- `val q = by lazy {...expression that returns something}` a convenient way to defer initialization of a field until it's first accessed
+
+  ```kt
+  val value by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {// DEFAULT
+      // only one thread will compute
+      computeValue()
+  }
+  val value by lazy(LazyThreadSafetyMode.PUBLICATION) {
+    // block can be executed many times by many threads, only first result will be cached
+    computeValue()
+  }
+  val value by lazy(LazyThreadSafetyMode.NONE) {
+    // no sync
+    computeValue()
+  }
+  ```
+
+- Inline function - Kotlin compiler copies the body of the function into every location where it is called
+
+- Contracts are ways of telling the type system about
+things it cannot infer on its own, but are nevertheless true statements, see `com.iv127.kotlin.starter.KotlinNotNullCustomContractTest`
+  - it is possible to make a contract that doesn't hold true in the implementation.
 
 ## API Usage
 
@@ -186,7 +208,7 @@ continue and perform the actual request that was initiated. If not, an error wil
 
   ```js
   fetch("/login", {
-    credentials: "include", // without this, it won’t receive and send any cookies alongside your request
+    credentials: "include", // without this, it won't receive and send any cookies alongside your request
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded"
