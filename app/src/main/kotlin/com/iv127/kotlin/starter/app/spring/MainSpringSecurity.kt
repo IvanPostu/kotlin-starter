@@ -35,23 +35,25 @@ fun main() {
     val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
     val appConfig = createAppConfig(env)
     val server = Server()
-    val connector = ServerConnector(
-        server,
-        HttpConnectionFactory()
-    )
+    val connector =
+        ServerConnector(
+            server,
+            HttpConnectionFactory()
+        )
     connector.port = appConfig.httpPort
     server.addConnector(connector)
-    server.handler = ServletContextHandler(
-        // enable sessions support, required for Spring Security
-        ServletContextHandler.SESSIONS
-    ).apply {
-        contextPath = "/"
-        resourceBase = System.getProperty("java.io.tmpdir")
-        servletContext.setAttribute("appConfig", appConfig)
-        servletHandler.addListener(
-            ListenerHolder(BootstrapWebApp::class.java)
-        )
-    }
+    server.handler =
+        ServletContextHandler(
+            // enable sessions support, required for Spring Security
+            ServletContextHandler.SESSIONS
+        ).apply {
+            contextPath = "/"
+            resourceBase = System.getProperty("java.io.tmpdir")
+            servletContext.setAttribute("appConfig", appConfig)
+            servletHandler.addListener(
+                ListenerHolder(BootstrapWebApp::class.java)
+            )
+        }
     server.start()
     server.join()
 }
@@ -64,20 +66,23 @@ class BootstrapWebApp : ServletContextListener {
     override fun contextInitialized(sce: ServletContextEvent) {
         val ctx = sce.servletContext
         LOG.debug("Extracting config")
-        val appConfig = ctx.getAttribute(
-            "appConfig"
-        ) as WebappConfig
+        val appConfig =
+            ctx.getAttribute(
+                "appConfig"
+            ) as WebappConfig
         LOG.debug("Setting up data source")
         val dataSource = createAndMigrateDataSource(appConfig)
         LOG.debug("Setting up Ktor servlet environment")
-        val appEngineEnvironment = applicationEngineEnvironment {
-            module {
-                createKtorApplication(appConfig, dataSource)
+        val appEngineEnvironment =
+            applicationEngineEnvironment {
+                module {
+                    createKtorApplication(appConfig, dataSource)
+                }
             }
-        }
-        val appEnginePipeline = defaultEnginePipeline(
-            appEngineEnvironment
-        )
+        val appEnginePipeline =
+            defaultEnginePipeline(
+                appEngineEnvironment
+            )
         BaseApplicationResponse.setupSendPipeline(
             appEnginePipeline.sendPipeline
         )
@@ -106,28 +111,29 @@ class BootstrapWebApp : ServletContextListener {
         val roleHierarchy = """
 ROLE_ADMIN > ROLE_USER
 """
-        val wac = object : AbstractRefreshableWebApplicationContext() {
-            override fun loadBeanDefinitions(
-                beanFactory: DefaultListableBeanFactory
-            ) {
-                beanFactory.registerSingleton(
-                    "dataSource",
-                    dataSource
-                )
-                beanFactory.registerSingleton(
-                    "rememberMeKey",
-                    "asdf"
-                )
-                beanFactory.registerSingleton(
-                    "roleHierarchy",
-                    RoleHierarchyImpl().apply {
-                        setHierarchy(roleHierarchy)
-                    }
-                )
-                AnnotatedBeanDefinitionReader(beanFactory)
-                    .register(WebappSecurityConfig::class.java)
+        val wac =
+            object : AbstractRefreshableWebApplicationContext() {
+                override fun loadBeanDefinitions(
+                    beanFactory: DefaultListableBeanFactory
+                ) {
+                    beanFactory.registerSingleton(
+                        "dataSource",
+                        dataSource
+                    )
+                    beanFactory.registerSingleton(
+                        "rememberMeKey",
+                        "asdf"
+                    )
+                    beanFactory.registerSingleton(
+                        "roleHierarchy",
+                        RoleHierarchyImpl().apply {
+                            setHierarchy(roleHierarchy)
+                        }
+                    )
+                    AnnotatedBeanDefinitionReader(beanFactory)
+                        .register(WebappSecurityConfig::class.java)
+                }
             }
-        }
 
         wac.servletContext = ctx
         ctx.addFilter(

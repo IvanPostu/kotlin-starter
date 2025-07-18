@@ -45,35 +45,38 @@ open class WebappSecurityConfig {
     open fun filterChain(
         http: HttpSecurity
     ): SecurityFilterChain {
-        http.authenticationProvider(object : AuthenticationProvider {
-            override fun authenticate(
-                auth: Authentication
-            ): Authentication? {
-                val username = auth.principal as String
-                val password = auth.credentials as String
-                val userId = sessionOf(dataSource).use { dbSess ->
-                    authenticateUser(dbSess, username, password)
+        http.authenticationProvider(
+            object : AuthenticationProvider {
+                override fun authenticate(
+                    auth: Authentication
+                ): Authentication? {
+                    val username = auth.principal as String
+                    val password = auth.credentials as String
+                    val userId =
+                        sessionOf(dataSource).use { dbSess ->
+                            authenticateUser(dbSess, username, password)
+                        }
+                    if (userId != null) {
+                        return UsernamePasswordAuthenticationToken(
+                            username,
+                            password,
+                            listOf(SimpleGrantedAuthority("ROLE_USER"))
+                        )
+                    }
+                    if (username == "quentin" && password == "test") {
+                        return UsernamePasswordAuthenticationToken(
+                            username,
+                            password,
+                            listOf(SimpleGrantedAuthority("ROLE_ADMIN"))
+                        )
+                    }
+                    return null
                 }
-                if (userId != null) {
-                    return UsernamePasswordAuthenticationToken(
-                        username,
-                        password,
-                        listOf(SimpleGrantedAuthority("ROLE_USER"))
-                    )
-                }
-                if (username == "quentin" && password == "test") {
-                    return UsernamePasswordAuthenticationToken(
-                        username,
-                        password,
-                        listOf(SimpleGrantedAuthority("ROLE_ADMIN"))
-                    )
-                }
-                return null
-            }
-            override fun supports(authentication: Class<*>) =
-                authentication ==
-                    UsernamePasswordAuthenticationToken::class.java
-        })
+
+                override fun supports(authentication: Class<*>) =
+                    authentication ==
+                        UsernamePasswordAuthenticationToken::class.java
+            })
 
         http
             .authorizeRequests()

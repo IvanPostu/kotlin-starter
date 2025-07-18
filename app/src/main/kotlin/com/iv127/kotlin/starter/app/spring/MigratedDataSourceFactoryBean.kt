@@ -6,6 +6,7 @@ import javax.sql.DataSource
 
 class MigratedDataSourceFactoryBean : FactoryBean<DataSource> {
     lateinit var unmigratedDataSource: DataSource
+
     override fun getObject() =
         unmigratedDataSource.also(::migrateDataSource)
 
