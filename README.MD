@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-291
+293
 
 ## Description
 
@@ -59,8 +59,6 @@ when something is `null` or false, e.g. `var test = nullable ?: default`
   - `fold` works like `reduce` in js or `collect` in java, accumulator can be of any type
   - `use` for classes that implement `Closeable`, in the end calls `close` even if exception is thrown in the block
   - `apply` runs initialization logic after object was created
-- **Extension Function** - invoke the
-function as if it were a method defined on the class itself, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 - A lambda with receiver is a special kind of lambda where you can call methods and access properties of a receiver object directly inside the lambda, without specifying it explicitly, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 - > benchmarks and real-world
 experience have shown that in some cases, you'll get more performance out of your
@@ -99,7 +97,12 @@ success = true WHERE version = 5` on startup, Flyway will think that the migrati
 signifying that your tests have as little knowledge as possible about the inner workings of
 the system under test
 - testing hierarchy: unit, integration, system, acceptance (E2E)
+- **Function Type**
+  - a type which defines signature of a method, e.g. `val greeter: (String) -> String = { name -> "Hello, $name!" }`
+  - analogue of functional interface in java
 - **Function type with receiver** is a function definition like `Application.() -> Unit`, where inside the body it is possible to use `this` of the Application type.
+- **Extension Function** - invoke the
+function as if it were a method defined on the class itself, see `com.iv127.kotlin.starter.StringExtensionFunctionTest`
 - The difference between `kotlin.coroutines` and `kotlinx.
 coroutines`
   - `kotlin.coroutines` low level kotlin api intended to work with async code and its state
@@ -139,6 +142,28 @@ coroutines`
 - Contracts are ways of telling the type system about
 things it cannot infer on its own, but are nevertheless true statements, see `com.iv127.kotlin.starter.KotlinNotNullCustomContractTest`
   - it is possible to make a contract that doesn't hold true in the implementation.
+
+- Sealed class, class hierarchy that is known on compile time
+  - Can only be subclassed within the same file where it's declared
+  - can be used for `Result` types or state machine implementation
+  - example:
+
+    ```kt
+    sealed class Result
+
+    data class Success(val data: String) : Result()
+    data class Error(val exception: Throwable) : Result()
+    object Loading : Result()
+    ```
+
+- Destructuring is a language mechanism which allows unpacking an object into multiple variables
+
+  ```kt
+  data class User(val name: String, val age: Int)
+
+  val user = User("Alice", 30)
+  val (name, age) = user
+  ```
 
 ## API Usage
 
@@ -300,7 +325,6 @@ fun test() {
 ## References
 
 - Lilleaas, A. (2023). *Pro Kotlin Web Apps from Scratch*.
-- <https://kotlinlang.org/docs/sealed-classes.html>
 - <https://codezup.com/dockerizing-kotlin-application-step-by-step-guide/>
 - <https://flywaydb.org/>
 - <https://www.baeldung.com/kotlin/detekt-static-code-analysis>
