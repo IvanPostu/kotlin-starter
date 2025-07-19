@@ -25,8 +25,8 @@ fun createAppConfigUsingTypesafe(env: EnvironmentType): WebappConfig =
 
 fun createAppConfigUsingHoplite(env: EnvironmentType): WebappConfig =
     ConfigLoaderBuilder.default()
-        .addResourceSource("/app.conf")
         .addResourceSource("/app-${env.shortName}.conf")
+        .addResourceSource("/app.conf")
         .addPreprocessor(EnvOrSystemPropertyPreprocessor)
         .build()
         .loadConfigOrThrow<WebappConfig>()

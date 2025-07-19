@@ -285,6 +285,19 @@ compilation
 - Jooby stores the JWT in the session cookie and does not give control over
 how to utilize the token
   - this logic can be written manually with this library for example <https://github.com/auth0/java-jwt>
+- What happens if env variable used in `prod.conf` is missing
+  - Typesafe lib.:
+
+    ```sh
+    APPLICATION_ENV=prod java -jar ./app/build/libs/app-1.0-SNAPSHOT-all.jar
+    Exception in thread "main" com.typesafe.config.ConfigException$UnresolvedSubstitution: app-prod.conf @ jar:file:/home/iv127/Projects/kotlin-starter/app/build/libs/app-1.0-SNAPSHOT-all.jar!/app-prod.conf: 1: Could not resolve substitution to a value: ${APPLICATION_HTTP_PORT}
+    ```
+
+  - Hoplite lib.:
+
+    ```sh
+    Could not parse classpath:/app-prod.conf com.typesafe.config.ConfigException$UnresolvedSubstitution: Reader: 1: Could not resolve substitution to a value: ${APPLICATION_HTTP_PORT}
+    ```
 
 ## TODO
 

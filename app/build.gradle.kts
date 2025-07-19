@@ -59,8 +59,8 @@ dependencies {
 
     // analogue for Typesafe Config
     // jvm target 11
-    implementation("com.sksamuel.hoplite:hoplite-core:2.6.3")
-    implementation("com.sksamuel.hoplite:hoplite-hocon:2.6.3")
+    implementation("com.sksamuel.hoplite:hoplite-core:2.8.0")
+    implementation("com.sksamuel.hoplite:hoplite-hocon:2.8.0")
 
     implementation(project(":core"))
 }

@@ -9,7 +9,7 @@ import com.iv127.kotlin.starter.app.TextWebResponse
 import com.iv127.kotlin.starter.app.WebResponse
 import com.iv127.kotlin.starter.app.authenticateUser
 import com.iv127.kotlin.starter.app.createAndMigrateDataSource
-import com.iv127.kotlin.starter.app.createAppConfigUsingTypesafe
+import com.iv127.kotlin.starter.app.createAppConfigUsingHoplite
 import com.iv127.kotlin.starter.app.findUser
 import com.iv127.kotlin.starter.app.getUser
 import io.jooby.Cookie
@@ -32,15 +32,22 @@ import kotlinx.html.p
 import kotlinx.html.stream.appendHTML
 import kotliquery.Session
 import kotliquery.sessionOf
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 import kotlin.time.Duration
 
 private const val DELAY_MS: Long = 300L
+private val LOG = LoggerFactory.getLogger(JoobyApplication::class.java)
+
+@Suppress("EmptyClassBlock")
+class JoobyApplication
 
 @Suppress("LongMethod")
 fun main(args: Array<String>) {
-    val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
-    val config = createAppConfigUsingTypesafe(env)
+    val env = EnvironmentType
+        .parseShortName(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.shortName)!!
+    val config = createAppConfigUsingHoplite(env)
+    LOG.info("Configuration loaded successfully: {}{}", System.lineSeparator(), config)
     val dataSource = createAndMigrateDataSource(config)
     runApp(args) {
         serverOptions {
