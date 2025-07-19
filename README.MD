@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-293
+298
 
 ## Description
 
@@ -272,6 +272,9 @@ compilation
 - Authentication management in Ktor handlers
   - best option, coroutine compatible, `request.javaSecurityPrincipal`
   - thread local approach `SecurityContextHolder.getContext().authentication`, incompatible with coroutines and async code
+
+- Jooby - signs cookie value but doesn't encrypt it
+  - Ktor - does both, signing and encryption
 
 ## TODO
 
