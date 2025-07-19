@@ -30,7 +30,8 @@ switch_java 8|11|17|21
 ./gradlew ktlintCheck
 
 # build and run
-./gradlew clean build
+./gradlew clean build --no-daemon
+./gradlew build --no-daemon
 java -jar ./app/build/libs/app-1.0-SNAPSHOT-all.jar
 
 # setup env vars
