@@ -1,7 +1,5 @@
 # Kotlin Starter
 
-298
-
 ## Description
 
 A starter Kotlin project.
