@@ -18,5 +18,5 @@ class InlineWithReifiedTest {
         return Gson().fromJson(json, T::class.java)
     }
 
-    private data class Person(val name: String);
+    private data class Person(val name: String)
 }

@@ -9,7 +9,7 @@ import com.iv127.kotlin.starter.app.TextWebResponse
 import com.iv127.kotlin.starter.app.WebResponse
 import com.iv127.kotlin.starter.app.authenticateUser
 import com.iv127.kotlin.starter.app.createAndMigrateDataSource
-import com.iv127.kotlin.starter.app.createAppConfig
+import com.iv127.kotlin.starter.app.createAppConfigUsingTypesafe
 import com.iv127.kotlin.starter.app.findUser
 import com.iv127.kotlin.starter.app.getUser
 import io.jooby.Cookie
@@ -39,9 +39,8 @@ private const val DELAY_MS: Long = 300L
 
 @Suppress("LongMethod")
 fun main(args: Array<String>) {
-
     val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
-    val config = createAppConfig(env)
+    val config = createAppConfigUsingTypesafe(env)
     val dataSource = createAndMigrateDataSource(config)
     runApp(args) {
         serverOptions {
@@ -62,45 +61,55 @@ fun main(args: Array<String>) {
             get("/") {
                 "Hello, World!"
             }
-            get("/", joobyWebResponse {
-                delay(DELAY_MS)
-                TextWebResponse("Hello, World!")
-            })
-            post("/db_test", joobyWebResponseDb(dataSource) { dbSess ->
-                val input = Gson().fromJson(
-                    ctx.body(String::class.java), Map::class.java
-                )
-                val email = input["email"]?.toString().orEmpty()
-                val response = findUser(dbSess, email)?.let { user ->
-                    JsonWebResponse(user)
-                } ?: JsonWebResponse(mapOf("message" to "user not found"))
-                response
-            })
-            get("/login", joobyWebResponse {
-                HtmlWebResponse(AppLayout("Log in").apply {
-                    pageBody {
-                        form(method = FormMethod.post, action = "/login") {
-                            p {
-                                label { +"E-mail" }
-                                input(type = InputType.text, name = "username")
-                            }
-                            p {
-                                label { +"Password" }
-                                input(type = InputType.password, name = "password")
-                            }
-                            button(type = ButtonType.submit) { +"Log in" }
-                        }
-                    }
+            get(
+                "/",
+                joobyWebResponse {
+                    delay(DELAY_MS)
+                    TextWebResponse("Hello, World!")
                 })
-            })
+            post(
+                "/db_test",
+                joobyWebResponseDb(dataSource) { dbSess ->
+                    val input =
+                        Gson().fromJson(
+                            ctx.body(String::class.java), Map::class.java
+                        )
+                    val email = input["email"]?.toString().orEmpty()
+                    val response =
+                        findUser(dbSess, email)?.let { user ->
+                            JsonWebResponse(user)
+                        } ?: JsonWebResponse(mapOf("message" to "user not found"))
+                    response
+                })
+            get(
+                "/login",
+                joobyWebResponse {
+                    HtmlWebResponse(
+                        AppLayout("Log in").apply {
+                            pageBody {
+                                form(method = FormMethod.post, action = "/login") {
+                                    p {
+                                        label { +"E-mail" }
+                                        input(type = InputType.text, name = "username")
+                                    }
+                                    p {
+                                        label { +"Password" }
+                                        input(type = InputType.password, name = "password")
+                                    }
+                                    button(type = ButtonType.submit) { +"Log in" }
+                                }
+                            }
+                        })
+                })
             post("/login") {
                 sessionOf(dataSource).use { dbSess ->
                     val formData = ctx.form()
-                    val userId = authenticateUser(
-                        dbSess,
-                        formData["username"].value(),
-                        formData["password"].value()
-                    )
+                    val userId =
+                        authenticateUser(
+                            dbSess,
+                            formData["username"].value(),
+                            formData["password"].value()
+                        )
                     if (userId == null) {
                         ctx.sendRedirect("/login")
                     } else {
@@ -119,13 +128,16 @@ fun main(args: Array<String>) {
                         next.apply(ctx)
                     }
                 }
-                get("/secret", joobyWebResponseDb(dataSource) { dbSess ->
-                    val user = getUser(
-                        dbSess,
-                        ctx.attribute<Long>("userId")!!
-                    )!!
-                    TextWebResponse("Hello, ${user.email}!")
-                })
+                get(
+                    "/secret",
+                    joobyWebResponseDb(dataSource) { dbSess ->
+                        val user =
+                            getUser(
+                                dbSess,
+                                ctx.attribute<Long>("userId")!!
+                            )!!
+                        TextWebResponse("Hello, ${user.email}!")
+                    })
                 get("/logout") {
                     ctx.session().destroy()
                     ctx.sendRedirect("/")

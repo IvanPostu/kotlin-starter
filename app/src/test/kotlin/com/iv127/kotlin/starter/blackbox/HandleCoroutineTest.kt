@@ -2,7 +2,7 @@ package com.iv127.kotlin.starter.blackbox
 
 import com.iv127.kotlin.starter.app.EnvironmentType
 import com.iv127.kotlin.starter.app.createAndMigrateDataSource
-import com.iv127.kotlin.starter.app.createAppConfig
+import com.iv127.kotlin.starter.app.createAppConfigUsingTypesafe
 import com.iv127.kotlin.starter.app.mapFromRow
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -26,7 +26,7 @@ import kotlin.test.Test
 class HandleCoroutineTest {
     companion object {
         private val LOG = LoggerFactory.getLogger(HandleCoroutineTest::class.java)
-        private val testAppConfig = createAppConfig(EnvironmentType.TEST)
+        private val testAppConfig = createAppConfigUsingTypesafe(EnvironmentType.TEST)
         private val testDataSource = createAndMigrateDataSource(testAppConfig)
     }
 

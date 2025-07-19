@@ -1,8 +1,11 @@
 package com.iv127.kotlin.starter.app
 
+import com.sksamuel.hoplite.ConfigLoaderBuilder
+import com.sksamuel.hoplite.addResourceSource
+import com.sksamuel.hoplite.preprocessor.EnvOrSystemPropertyPreprocessor
 import com.typesafe.config.ConfigFactory
 
-fun createAppConfig(env: EnvironmentType): WebappConfig =
+fun createAppConfigUsingTypesafe(env: EnvironmentType): WebappConfig =
     ConfigFactory
         .parseResources("app-${env.shortName}.conf")
         .withFallback(ConfigFactory.parseResources("app.conf"))
@@ -10,8 +13,6 @@ fun createAppConfig(env: EnvironmentType): WebappConfig =
         .let {
             WebappConfig(
                 httpPort = it.getInt("httpPort"),
-                env = env,
-                secretExample = "qwerty",
                 dbUrl = it.getString("dbUrl"),
                 dbUser = it.getString("dbUser"),
                 dbPassword = it.getString("dbPassword"),
@@ -21,3 +22,11 @@ fun createAppConfig(env: EnvironmentType): WebappConfig =
                 useSecureCookie = it.getBoolean("useSecureCookie"),
             )
         }
+
+fun createAppConfigUsingHoplite(env: EnvironmentType): WebappConfig =
+    ConfigLoaderBuilder.default()
+        .addResourceSource("/app.conf")
+        .addResourceSource("/app-${env.shortName}.conf")
+        .addPreprocessor(EnvOrSystemPropertyPreprocessor)
+        .build()
+        .loadConfigOrThrow<WebappConfig>()

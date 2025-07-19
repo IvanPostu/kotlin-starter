@@ -17,6 +17,9 @@ A starter Kotlin project.
 ## Shell
 
 ```sh
+# switch java version (available only in nix shell ./app.nix)
+switch_java 8|11|17|21
+
 ./gradlew :app:run
 ./gradlew run
 
@@ -25,6 +28,10 @@ A starter Kotlin project.
 
 ./gradlew ktlintFormat
 ./gradlew ktlintCheck
+
+# build and run
+./gradlew clean build
+java -jar ./app/build/libs/app-1.0-SNAPSHOT-all.jar
 
 # setup env vars
 - Set env variable:
@@ -277,6 +284,7 @@ compilation
   - Ktor - does both, signing and encryption
 - Jooby stores the JWT in the session cookie and does not give control over
 how to utilize the token
+  - this logic can be written manually with this library for example <https://github.com/auth0/java-jwt>
 
 ## TODO
 

@@ -10,7 +10,8 @@ group = "com.iv127.kotlin.starter.app"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("com.iv127.kotlin.starter.app.Application")
+    // mainClass.set("com.iv127.kotlin.starter.app.Application")
+    mainClass.set("com.iv127.kotlin.starter.app.jooby.JoobyApplicationKt")
 }
 
 val ktorVersion = "2.2.0"
@@ -55,6 +56,11 @@ dependencies {
     // java analogue of ktor
     implementation("io.jooby:jooby:2.16.1")
     implementation("io.jooby:jooby-netty:2.16.1")
+
+    // analogue for Typesafe Config
+    // jvm target 11
+    implementation("com.sksamuel.hoplite:hoplite-core:2.6.3")
+    implementation("com.sksamuel.hoplite:hoplite-hocon:2.6.3")
 
     implementation(project(":core"))
 }

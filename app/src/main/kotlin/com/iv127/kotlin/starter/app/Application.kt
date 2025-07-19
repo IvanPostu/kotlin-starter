@@ -83,7 +83,7 @@ class Application {
         @JvmStatic
         fun main(args: Array<String>) {
             val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
-            val webappConfig = createAppConfig(env)
+            val webappConfig = createAppConfigUsingTypesafe(env)
             LOG.info("Configuration loaded successfully: {}{}", System.lineSeparator(), webappConfig)
             embeddedServer(factory = Netty, port = webappConfig.httpPort) {
                 val dataSource = createAndMigrateDataSource(webappConfig)
@@ -172,9 +172,6 @@ class Application {
                 }
             }
 
-
-
-            LOG.info("Application runs in the environment ${webappConfig.env}")
             this.install(StatusPages) {
                 exception<Throwable> { call, cause ->
                     LOG.error("An unknown error occurred", cause)

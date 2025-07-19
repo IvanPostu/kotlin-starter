@@ -9,9 +9,10 @@ class DelegatingWithByLazyTest {
     @Test
     fun testDelegatingWithByLazyTest() {
         val useLotsOfCpuCounter = AtomicInteger(0)
-        val useLotsOfCpu: Runnable = kotlinx.coroutines.Runnable {
-            useLotsOfCpuCounter.incrementAndGet()
-        }
+        val useLotsOfCpu: Runnable =
+            kotlinx.coroutines.Runnable {
+                useLotsOfCpuCounter.incrementAndGet()
+            }
 
         class Foo(val myInput: String) {
             val expensiveThing: String by lazy {
@@ -30,9 +31,10 @@ class DelegatingWithByLazyTest {
     @Test
     fun testDelegatingWithByRegularMethodTest() {
         val useLotsOfCpuCounter = AtomicInteger(0)
-        val useLotsOfCpu: Runnable = kotlinx.coroutines.Runnable {
-            useLotsOfCpuCounter.incrementAndGet()
-        }
+        val useLotsOfCpu: Runnable =
+            kotlinx.coroutines.Runnable {
+                useLotsOfCpuCounter.incrementAndGet()
+            }
 
         class Foo(val myInput: String) {
             fun expensiveThing(): String {

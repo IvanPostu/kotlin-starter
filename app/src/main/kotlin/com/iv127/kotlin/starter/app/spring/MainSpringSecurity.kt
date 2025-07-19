@@ -5,7 +5,7 @@ import com.iv127.kotlin.starter.app.Application.Companion.createKtorApplication
 import com.iv127.kotlin.starter.app.EnvironmentType
 import com.iv127.kotlin.starter.app.WebappConfig
 import com.iv127.kotlin.starter.app.createAndMigrateDataSource
-import com.iv127.kotlin.starter.app.createAppConfig
+import com.iv127.kotlin.starter.app.createAppConfigUsingTypesafe
 import com.iv127.kotlin.starter.app.spring.security.WebappSecurityConfig
 import io.ktor.server.application.ApplicationStarting
 import io.ktor.server.engine.BaseApplicationResponse
@@ -33,7 +33,7 @@ private val LOG = LoggerFactory.getLogger(Application::class.java)
 
 fun main() {
     val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
-    val appConfig = createAppConfig(env)
+    val appConfig = createAppConfigUsingTypesafe(env)
     val server = Server()
     val connector =
         ServerConnector(

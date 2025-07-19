@@ -4,7 +4,7 @@ import com.iv127.kotlin.starter.app.Application
 import com.iv127.kotlin.starter.app.Application.Companion.createKtorApplication
 import com.iv127.kotlin.starter.app.EnvironmentType
 import com.iv127.kotlin.starter.app.WebappConfig
-import com.iv127.kotlin.starter.app.createAppConfig
+import com.iv127.kotlin.starter.app.createAppConfigUsingTypesafe
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -20,7 +20,7 @@ fun main() {
     LOG.debug("Starting application...")
     val env = EnvironmentType.valueOf(System.getenv("APPLICATION_ENV") ?: EnvironmentType.LOCAL.name)
     LOG.debug("Application runs in the environment {}", env)
-    val config = createAppConfig(env)
+    val config = createAppConfigUsingTypesafe(env)
     LOG.debug("Creating app context")
     val ctx = createApplicationContext(config)
     LOG.debug("Getting data source")

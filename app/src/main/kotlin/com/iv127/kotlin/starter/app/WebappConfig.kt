@@ -3,9 +3,7 @@ package com.iv127.kotlin.starter.app
 import kotlin.reflect.full.declaredMemberProperties
 
 data class WebappConfig(
-    val env: EnvironmentType,
     val httpPort: Int,
-    val secretExample: String?,
     val dbUser: String,
     val dbPassword: String,
     val dbUrl: String,
