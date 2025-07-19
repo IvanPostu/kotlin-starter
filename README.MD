@@ -275,6 +275,8 @@ compilation
 
 - Jooby - signs cookie value but doesn't encrypt it
   - Ktor - does both, signing and encryption
+- Jooby stores the JWT in the session cookie and does not give control over
+how to utilize the token
 
 ## TODO
 
@@ -334,7 +336,8 @@ fun test() {
 
 ## References
 
-- Lilleaas, A. (2023). *Pro Kotlin Web Apps from Scratch*.
+- Lilleaas, August (2023). *Pro Kotlin Web Apps from Scratch*.
+- Tim Lavers (Apress, 2021). *Learn to Program with Kotlin*
 - <https://codezup.com/dockerizing-kotlin-application-step-by-step-guide/>
 - <https://flywaydb.org/>
 - <https://www.baeldung.com/kotlin/detekt-static-code-analysis>
