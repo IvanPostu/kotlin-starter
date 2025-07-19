@@ -300,6 +300,12 @@ how to utilize the token
     Could not parse classpath:/app-prod.conf com.typesafe.config.ConfigException$UnresolvedSubstitution: Reader: 1: Could not resolve substitution to a value: ${APPLICATION_HTTP_PORT}
     ```
 
+- Hoplite has support for secrets through `Masked` type which replaces the value with `****`
+
+- Junit5 alternatives: Spek, Kotest
+- Spek framework has intellij plugin (isn't working)
+  - Spek is dead, see <https://github.com/spekframework/spek/> **:(**
+
 ## TODO
 
 - Jib for layered docker images - <https://github.com/GoogleContainerTools/jib>
