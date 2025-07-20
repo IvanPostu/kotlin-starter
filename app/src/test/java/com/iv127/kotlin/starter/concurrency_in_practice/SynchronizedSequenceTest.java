@@ -37,7 +37,7 @@ class SynchronizedSequenceTest {
 
         ExecutorService executor = Executors.newFixedThreadPool(countOfThreads);
         executor.invokeAll(tasks);
-        executor.close();
+        executor.shutdownNow();
 
         int next = sequence.getNext();
         System.out.println(next);

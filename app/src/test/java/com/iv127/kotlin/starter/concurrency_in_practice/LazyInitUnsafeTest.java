@@ -7,29 +7,29 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class UnsafeSequenceTest {
+public class LazyInitUnsafeTest {
 
     @org.junit.jupiter.api.Disabled
     @RepeatedTest(200)
-    void testGetNext() throws Exception {
+    public void testLazyInit() throws Exception {
         int countOfThreads = 400;
         CyclicBarrier barrier = new CyclicBarrier(countOfThreads, () -> {
             System.out.println("All threads reached the barrier. Proceeding...");
         });
-        UnsafeSequence sequence = new UnsafeSequence();
+        int[] mutableInt = {0};
+        LazyInitUnsafe<Integer> initializer = new LazyInitUnsafe<>(
+                () -> mutableInt[0]++);
         List<Callable<Void>> tasks = IntStream.range(0, countOfThreads)
                 .mapToObj(i -> new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
                         barrier.await();
                         if (ThreadLocalRandom.current().nextInt(2) == 0) {
-                            Thread.sleep(ThreadLocalRandom.current().nextInt(2));
-                            System.out.println(sequence.getNext() + 90);
+                            assertEquals(0, initializer.getInstance() - initializer.getInstance());
                         } else {
-                            Thread.sleep(ThreadLocalRandom.current().nextInt(2));
-                            System.out.println(sequence.getNext() + 1);
+                            assertEquals(1, initializer.getInstance() - initializer.getInstance() + 1);
                         }
                         return null;
                     }
@@ -40,8 +40,9 @@ class UnsafeSequenceTest {
         executor.invokeAll(tasks);
         executor.shutdownNow();
 
-        int next = sequence.getNext();
-        System.out.println(next);
-        assertNotEquals(countOfThreads, next);
+        int number = initializer.getInstance();
+        System.out.println(number);
+        assertEquals(1, mutableInt[0]);
     }
+
 }

@@ -364,6 +364,17 @@ fun test() {
 | (no modifier)  | internal       |
 | private        | private        |
 
+## Terminology
+
+- Specification - contract
+- Invariants - constraints
+- Post-condition - effect of an operation
+- Thread-safety - situation when a class continues to behave correctly when accessed
+from multiple threads
+- Raise condition - unpredictable result after execution of a section of code by many threads, e.g.
+  - `check-then-act` (e.g. if file doesn't exist, create and write to it)
+  - `data-race`(Read-modify-write ) - increment of an int
+
 ## References
 
 - Lilleaas, August (2023). *Pro Kotlin Web Apps from Scratch*.
