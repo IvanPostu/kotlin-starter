@@ -1,5 +1,7 @@
 # Kotlin Starter
 
+36
+
 ## Description
 
 A starter Kotlin project.
@@ -305,6 +307,8 @@ how to utilize the token
   - Spek is dead, see <https://github.com/spekframework/spek/> **:(**
 
 ## TODO
+
+- Tim Lavers (Apress, 2021). *Learn to Program with Kotlin*
 
 - Jib for layered docker images - <https://github.com/GoogleContainerTools/jib>
 
