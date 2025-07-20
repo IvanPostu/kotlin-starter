@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-36
+63
 
 ## Description
 
@@ -173,6 +173,12 @@ things it cannot infer on its own, but are nevertheless true statements, see `co
   val (name, age) = user
   ```
 
+- when using locks to coordinate access to a variable, the same lock must be
+used wherever that variable is accessed
+- server vs. client flags:
+  - `java -server -cp yourApp.jar com.example.Main` apply optimizations
+  - `java -client -cp yourApp.jar com.example.Main` fast startup
+
 ## API Usage
 
 ```sh
@@ -306,6 +312,8 @@ how to utilize the token
 - Spek framework has intellij plugin (isn't working)
   - Spek is dead, see <https://github.com/spekframework/spek/> **:(**
 
+- Java intrinsic locks aren't reentrant
+
 ## TODO
 
 - Tim Lavers (Apress, 2021). *Learn to Program with Kotlin*
@@ -364,7 +372,7 @@ fun test() {
 | (no modifier)  | internal       |
 | private        | private        |
 
-## Terminology
+## Concurrency tips
 
 - Specification - contract
 - Invariants - constraints
@@ -374,6 +382,13 @@ from multiple threads
 - Raise condition - unpredictable result after execution of a section of code by many threads, e.g.
   - `check-then-act` (e.g. if file doesn't exist, create and write to it)
   - `data-race`(Read-modify-write ) - increment of an int
+- Nonatomic 64-bit operations - `Out-of-thin-air safety` - double and long, it is therefore possible to read a nonvolatile long and
+get back the high 32 bits of one value and the low 32 bits of another.
+- Locking and visibility - `synchronize` guarantees visibility of changes made by thread that entered this block to other thread
+  - Only synchronized and volatile guarantees it
+- volatile can be used for flags like `isInitialized` or `osShutdown`
+- Locking can guarantee both visibility and atomicity; volatile variables can
+only guarantee visibility.
 
 ## References
 
