@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-63
+82
 
 ## Description
 
@@ -389,6 +389,16 @@ get back the high 32 bits of one value and the low 32 bits of another.
 - volatile can be used for flags like `isInitialized` or `osShutdown`
 - Locking can guarantee both visibility and atomicity; volatile variables can
 only guarantee visibility.
+- `thread confinement` - If data is only accessed from a single thread,
+no synchronization is needed (To make this
+easier, Swing provides the invokeLater mechanism to schedule a Runnable for
+execution in the event thread.)
+  - Another example of thread confinement is jdbc connection pool
+  - and `ThreadLocal`
+  - local variables (primitives) + copy for reference types
+  - Another reason to make a subsystem single-threaded (to use thread confinement) is deadlock avoidance; this is one of the
+primary reasons most GUI frameworks are single-threaded
+- static assignment and initialization is synchronized by the JVM
 
 ## References
 
