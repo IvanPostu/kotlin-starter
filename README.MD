@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-82
+118
 
 ## Description
 
@@ -399,6 +399,85 @@ execution in the event thread.)
   - Another reason to make a subsystem single-threaded (to use thread confinement) is deadlock avoidance; this is one of the
 primary reasons most GUI frameworks are single-threaded
 - static assignment and initialization is synchronized by the JVM
+- `ConcurrentHashMap` replacement for synchronized `HashMap`
+- `ConcurrentSkipListMap` replacement for synchronized `TreeMap`
+- `ConcurrentSkipListSet` replacement for synchronized `TreeSet`
+- `CopyOnWriteArraySet` replacement for synchronized `Set`
+- `CopyOnWriteArrayList` replacement for synchronized `List`
+- Why synchronized collections are bad?
+  - `HashMap.get` or `List.contains` can be time-consuming, and will force other threads to wait during the operation
+- Concurrent collections offer higher throughput with little performance penalty for single-threaded access
+- Concurrent collection iterator doesn't throw `ConcurrentModificationException`, it traverses elements as they existed when the iterator was
+constructed, and may (but is not guaranteed to) reflect modifications to the collection after the construction of the iterator
+- Concurrent collection `isEmpty` and `size()` are not precise
+- Blocking queues provide blocking put and take methods as well as the timed
+equivalents offer and poll. If the queue is full, put blocks until space becomes
+available; if the queue is empty, take blocks until an element is available.
+- Bounded(fixed size) vs. unbounded(unlimited) blocking queues
+- **`consumer-producer`** pattern - producer threads put items into a **queue** and consumer threads process them
+- **`work stealing`** pattern - if a consumer exhausts the work in its own **deque**, it can steal work from the tail of someone else’s **deque**
+  - producers can also be consumers
+- dequeues: `ArrayDeque`, `LinkedBlockingDeque`
+- BlockingQueueS: `LinkedBlockingQueue`, `ArrayBlockingQueue`(FIFO)
+  - `PriorityBlockingQueue` (ordered by `Comparable` or `Comparator`, non FIFO)
+  - `SynchronousQueue` hand off work, `put` must wait for a `take`
+- Interruption
+  - **Propagate the `InterruptedException`**
+  - **Restore the interrupt** - calling
+interrupt on the current thread, so that code higher up the call stack can
+see that an interrupt was issued
+
+    ```java
+        public class TaskRunnable implements Runnable {
+            BlockingQueue<Task> queue;
+            public void run() {
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        Task task = queue.take();
+                        processTask(task);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt(); // allow loop condition to become true
+                    }
+                }
+
+                // Now we can clean up and exit gracefully
+                System.out.println("Thread was interrupted. Exiting...");
+            }
+        }
+    ```
+
+- Latch is an object which blocks all threads until its final state has been achieved, it works like a gate for threads, once it opens, it can't return any other state
+  - `CountDownLatch`
+
+    ```java
+        public class TestHarness {
+            public long timeTasks(int nThreads, final Runnable task)
+                    throws InterruptedException {
+                final CountDownLatch startGate = new CountDownLatch(1);
+                final CountDownLatch endGate = new CountDownLatch(nThreads);
+                for (int i = 0; i < nThreads; i++) {
+                    Thread t = new Thread() {
+                        public void run() {
+                            try {
+                                startGate.await();
+                                try {
+                                    task.run();
+                                } finally {
+                                    endGate.countDown();
+                                }
+                            } catch (InterruptedException ignored) { }
+                        }
+                    };
+                    t.start();
+                }
+                long start = System.nanoTime();
+                startGate.countDown();
+                endGate.await();
+                long end = System.nanoTime();
+                return end-start;
+            }
+        }
+    ```
 
 ## References
 
