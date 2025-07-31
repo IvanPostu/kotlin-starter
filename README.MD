@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-118
+142
 
 ## Description
 
@@ -597,6 +597,17 @@ the caching process, good example is `LazyLoadingSupplier`
       }
   }
   ```
+
+- **Network congestion** - a traffic jam, but for data which happens when too many devices or users are trying to send data through a network at the same time
+
+- `-Xss` jvm flag, stack size of a thread default value vary between 512KB and 1MB depending on java version (ignoring OS thread limitation the less this value is the more threads we can crete)
+  - `-Xss512k` 512 KB
+  - `-Xss2m` 2 MB
+- Two main factors in web applications
+  - Responsiveness
+  - Throughput
+
+- Any thread per task approach should be replaced with thread pool usage
 
 ## References
 
