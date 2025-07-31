@@ -428,56 +428,175 @@ interrupt on the current thread, so that code higher up the call stack can
 see that an interrupt was issued
 
     ```java
-        public class TaskRunnable implements Runnable {
-            BlockingQueue<Task> queue;
-            public void run() {
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        Task task = queue.take();
-                        processTask(task);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt(); // allow loop condition to become true
-                    }
+    public class TaskRunnable implements Runnable {
+        BlockingQueue<Task> queue;
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Task task = queue.take();
+                    processTask(task);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // allow loop condition to become true
                 }
-
-                // Now we can clean up and exit gracefully
-                System.out.println("Thread was interrupted. Exiting...");
             }
+
+            // Now we can clean up and exit gracefully
+            System.out.println("Thread was interrupted. Exiting...");
         }
+    }
     ```
 
 - Latch is an object which blocks all threads until its final state has been achieved, it works like a gate for threads, once it opens, it can't return any other state
   - `CountDownLatch`
 
     ```java
-        public class TestHarness {
-            public long timeTasks(int nThreads, final Runnable task)
-                    throws InterruptedException {
-                final CountDownLatch startGate = new CountDownLatch(1);
-                final CountDownLatch endGate = new CountDownLatch(nThreads);
-                for (int i = 0; i < nThreads; i++) {
-                    Thread t = new Thread() {
-                        public void run() {
+    public class TestHarness {
+        public long timeTasks(int nThreads, final Runnable task)
+                throws InterruptedException {
+            final CountDownLatch startGate = new CountDownLatch(1);
+            final CountDownLatch endGate = new CountDownLatch(nThreads);
+            for (int i = 0; i < nThreads; i++) {
+                Thread t = new Thread() {
+                    public void run() {
+                        try {
+                            startGate.await();
                             try {
-                                startGate.await();
-                                try {
-                                    task.run();
-                                } finally {
-                                    endGate.countDown();
-                                }
-                            } catch (InterruptedException ignored) { }
-                        }
-                    };
-                    t.start();
-                }
-                long start = System.nanoTime();
-                startGate.countDown();
-                endGate.await();
-                long end = System.nanoTime();
-                return end-start;
+                                task.run();
+                            } finally {
+                                endGate.countDown();
+                            }
+                        } catch (InterruptedException ignored) { }
+                    }
+                };
+                t.start();
+            }
+            long start = System.nanoTime();
+            startGate.countDown();
+            endGate.await();
+            long end = System.nanoTime();
+            return end-start;
+        }
+    }
+    ```
+
+- Preloader example
+
+  ```java
+    public class Preloader {
+        private final FutureTask<ProductInfo> future =
+                new FutureTask<ProductInfo>(new Callable<ProductInfo>() {
+                    public ProductInfo call() throws DataLoadException {
+                        return loadProductInfo();
+                    }
+                });
+        private final Thread thread = new Thread(future);
+        public void start() { thread.start(); }
+        public ProductInfo get()
+                throws DataLoadException, InterruptedException {
+            try {
+                return future.get();
+            } catch (ExecutionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof DataLoadException)
+                    throw (DataLoadException) cause;
+                else
+                    throw launderThrowable(cause);
             }
         }
-    ```
+    }
+
+    /** If the Throwable is an Error, throw it; if it is a
+     * RuntimeException return it, otherwise throw IllegalStateException
+    */
+    public static RuntimeException launderThrowable(Throwable t) {
+        if (t instanceof RuntimeException)
+            return (RuntimeException) t;
+        else if (t instanceof Error)
+            throw (Error) t;
+        else
+            throw new IllegalStateException("Not unchecked", t);
+    }
+  ```
+
+- `CyclicBarrier` allows a fixed number of threads to rendezvous repeatedly at
+a barrier point
+  - If a call to await times out or a thread blocked in
+await is interrupted, then the barrier is considered broken and all outstanding calls
+to await terminate with BrokenBarrierException.
+  - `barrier action` a Runnable that is
+executed (in one of the subtask threads) when the barrier is successfully passed
+but before the blocked threads are released
+
+- Bounded hash set example, works similar to `BlockingQueue`
+
+  ```java
+  public class BoundedHashSet<T> {
+      private final Set<T> set;
+      private final Semaphore sem;
+      public BoundedHashSet(int bound) {
+          this.set = Collections.synchronizedSet(new HashSet<T>());
+          sem = new Semaphore(bound);
+      }
+      public boolean add(T o) throws InterruptedException {
+          sem.acquire();
+          boolean wasAdded = false;
+          try {
+              wasAdded = set.add(o);
+              return wasAdded;
+          }
+          finally {
+              if (!wasAdded)
+                  sem.release();
+          }
+      }
+      public boolean remove(Object o) {
+          boolean wasRemoved = set.remove(o);
+          if (wasRemoved)
+              sem.release();
+          return wasRemoved;
+      }
+  }
+  ```
+
+- Barier is useful is situations when one step can
+be done in parallel but all the work associated with a given step must complete
+before advancing to the next step
+
+- `Exchanger` - class used to publish safely objects (buffers) between threads
+
+- **memoization** - wrapper that remembers the results of previous computations and encapsulates
+the caching process, good example is `LazyLoadingSupplier`
+
+  ```java
+  public class Memoizer<A, V> implements Computable<A, V> {
+      private final ConcurrentMap<A, Future<V>> cache
+              = new ConcurrentHashMap<A, Future<V>>();
+      private final Computable<A, V> c;
+      public Memoizer(Computable<A, V> c) { this.c = c; }
+      public V compute(final A arg) throws InterruptedException {
+          while (true) {
+              Future<V> f = cache.get(arg);
+              if (f == null) {
+                  Callable<V> eval = new Callable<V>() {
+                      public V call() throws InterruptedException {
+                          return c.compute(arg);
+                      }
+                  };
+                  FutureTask<V> ft = new FutureTask<V>(eval);
+                  f = cache.putIfAbsent(arg, ft);
+                  if (f == null) { f = ft; ft.run(); }
+              }
+              try {
+                  return f.get();
+              } catch (CancellationException e) {
+                  cache.remove(arg, f);
+              } catch (ExecutionException e) {
+                  throw launderThrowable(e.getCause());
+              }
+          }
+      }
+  }
+  ```
 
 ## References
 
