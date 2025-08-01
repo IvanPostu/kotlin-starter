@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-142
+156
 
 ## Description
 
@@ -600,6 +600,7 @@ the caching process, good example is `LazyLoadingSupplier`
 
 - **Network congestion** - a traffic jam, but for data which happens when too many devices or users are trying to send data through a network at the same time
 
+- `-Djava.security.egd=file:/dev/./urandom"` avoid delay on java startup for collecting random entropy, it should be used for dev only
 - `-Xss` jvm flag, stack size of a thread default value vary between 512KB and 1MB depending on java version (ignoring OS thread limitation the less this value is the more threads we can crete)
   - `-Xss512k` 512 KB
   - `-Xss2m` 2 MB
@@ -608,6 +609,181 @@ the caching process, good example is `LazyLoadingSupplier`
   - Throughput
 
 - Any thread per task approach should be replaced with thread pool usage
+
+- **graceful shutdown** (finish what you’ve started but don’t accept any new work) to abrupt
+- **shutdown** (turn off the power to the machine room), and various points in between
+
+- ExecutorService methods
+
+  ```java
+  public interface ExecutorService extends Executor {
+      void shutdown();
+      List<Runnable> shutdownNow();
+      boolean isShutdown();
+      boolean isTerminated();
+      boolean awaitTermination(long timeout, TimeUnit unit)
+              throws InterruptedException;
+
+  // ... additional convenience methods for task submission
+  }
+  ```
+
+  - ExecutorService has three states—running, shutting
+down, and terminated
+
+- **shutdown** - gracefully shutdown, executes all tasks in queue, doesn't accept new ones
+- **shutdownNow**  initiates an abrupt shut-down: it attempts to cancel outstanding tasks and does not start any tasks that
+are queued but not begun
+
+- It is common to follow `shutdown` immediately by `awaitTermination`, creating the effect of synchronously shutting down the ExecutorService
+
+- `ScheduledThreadPoolExecutor` is better than `Timer` because Timer uses one thread and if timer task takes too long, the accuracy suffers
+
+- `DelayQueue` impl of `BlockingQueue`, a Delayed has an associated delay time; elements in a DelayQueue can only be taken once their delay expires. The queue returns elements in order of their delay expiration time.
+
+- Example of bad usage of `java.util.Timer`
+
+  ```java
+  public class OutOfTime {
+      public static void main(String[] args) throws Exception {
+          Timer timer = new Timer();
+          timer.schedule(new ThrowTask(), 1);
+          SECONDS.sleep(1);
+          timer.schedule(new ThrowTask(), 1);
+          SECONDS.sleep(5);
+      }
+      static class ThrowTask extends TimerTask {
+          public void run() { throw new RuntimeException(); }
+      }
+  }
+  //it terminates after one second with an IllegalStateException  whose message text is “Timer already cancelled”.
+  ```
+
+- Task:
+  - Runnable `void run();`
+  - Callable `V call() throws Exception;`
+  - 4 states created, submitted, started, and completed
+  - `Future` represents the lifecycle of a task and provides methods to test whether
+the task has completed or been cancelled, retrieve its result, and cancel the task
+  - Once a task is completed, it stays in that state forever.
+
+  ```java
+  public interface Callable<V> {
+      V call() throws Exception;
+  }
+  public interface Future<V> {
+      boolean cancel(boolean mayInterruptIfRunning);
+      boolean isCancelled();
+      boolean isDone();
+      V get() throws InterruptedException, ExecutionException,
+              CancellationException;
+      V get(long timeout, TimeUnit unit)
+              throws InterruptedException, ExecutionException,
+              CancellationException, TimeoutException;
+  }
+  ```
+
+- If the task
+completes by throwing an exception, get rethrows it wrapped in an `ExecutionException`
+  - the underlying exception can be retrieved with `getCause`
+- if it was cancelled, get throws `CancellationException`
+
+- **coordination overhead** overhead gotten on spliting problem to tasks for executor and joining results, e.g. `parallelStream`
+
+- **CompletionService** combines the functionality of an Executor and a `BlockingQueue`. Callable tasks can be submitted to it for execution and use the queue-
+like methods take and poll to retrieve completed results, packaged as Futures,
+as they become available.
+  - usage:
+
+  ```java
+  public class Renderer {
+      private final ExecutorService executor;
+      Renderer(ExecutorService executor) { this.executor = executor; }
+      void renderPage(CharSequence source) {
+          final List<ImageInfo> info = scanForImageInfo(source);
+          CompletionService<ImageData> completionService =
+                  new ExecutorCompletionService<ImageData>(executor);
+          for (final ImageInfo imageInfo : info)
+              completionService.submit(new Callable<ImageData>() {
+                  public ImageData call() {
+                      return imageInfo.downloadImage();
+                  }
+              });
+          renderText(source);
+          try {
+              for (int t = 0, n = info.size(); t < n; t++) {
+                  Future<ImageData> f = completionService.take();
+                  ImageData imageData = f.get();
+                  renderImage(imageData);
+              }
+          } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+          } catch (ExecutionException e) {
+              throw launderThrowable(e.getCause());
+          }
+      }
+  }
+  // Using CompletionService to render page elements as they become available
+  ```
+
+  ```java
+  ///Fetching an advertisement with a time budget
+  Page renderPageWithAd() throws InterruptedException {
+      long endNanos = System.nanoTime() + TIME_BUDGET;
+      Future<Ad> f = exec.submit(new FetchAdTask());
+      // Render the page while waiting for the ad
+      Page page = renderPageBody();
+      Ad ad;
+      try {
+          // Only wait for the remaining time budget
+          long timeLeft = endNanos - System.nanoTime();
+          ad = f.get(timeLeft, NANOSECONDS);
+      } catch (ExecutionException e) {
+          ad = DEFAULT_AD;
+      } catch (TimeoutException e) {
+          ad = DEFAULT_AD;
+          f.cancel(true);
+      }
+      page.setAd(ad);
+      return page;
+  }
+  ```
+
+  ```java
+  // usage of invokeALl with timeout handling
+  private class QuoteTask implements Callable<TravelQuote> {
+      private final TravelCompany company;
+      private final TravelInfo travelInfo;
+      ...
+      public TravelQuote call() throws Exception {
+          return company.solicitQuote(travelInfo);
+      }
+  }
+  public List<TravelQuote> getRankedTravelQuotes(
+          TravelInfo travelInfo, Set<TravelCompany> companies,
+          Comparator<TravelQuote> ranking, long time, TimeUnit unit) throws InterruptedException {
+      List<QuoteTask> tasks = new ArrayList<QuoteTask>();
+      for (TravelCompany company : companies)
+          tasks.add(new QuoteTask(company, travelInfo));
+      List<Future<TravelQuote>> futures =
+              exec.invokeAll(tasks, time, unit);
+      List<TravelQuote> quotes =
+              new ArrayList<TravelQuote>(tasks.size());
+      Iterator<QuoteTask> taskIter = tasks.iterator();
+      for (Future<TravelQuote> f : futures) {
+          QuoteTask task = taskIter.next();
+          try {
+              quotes.add(f.get());
+          } catch (ExecutionException e) {
+              quotes.add(task.getFailureQuote(e.getCause()));
+          } catch (CancellationException e) {
+              quotes.add(task.getTimeoutQuote(e));
+          }
+      }
+      Collections.sort(quotes, ranking);
+      return quotes;
+  }
+  ```
 
 ## References
 
