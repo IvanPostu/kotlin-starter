@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-156
+202
 
 ## Description
 
@@ -1008,10 +1008,73 @@ handler exists, the default behavior is to print the stack trace to System.err
   - use `Closeable` with try-with-resource
 
 - Java cant stop a thread, but it provides a
-cooperative interruption mechanism 
+cooperative interruption mechanism
 
-- all threads are executing tasks that are blocked waiting for other
-tasks still on the work queue. This is called thread **starvation deadlock**
+- `Runtime.availableProcessors` is the main factor in determining pool size
+- When a `ThreadPoolExecutor` is initially created, the core threads are not started immediately but
+instead as tasks are submitted, unless is called `prestartAllCoreThreads`
+
+- `newCachedThreadPool` factory sets the maximum pool size to Integer.MAX_VALUE and the core pool size to zero with a timeout of one minute, uses `SynchronousQueue`
+- `newFixedThreadPool` factory sets both the core pool size and the maximum pool size to the requested pool size, uses `LinkedBlockingQueue`
+
+- A large queue coupled with a small pool can help reduce memory
+usage, CPU usage, and context switching, at the cost of potentially constraining
+throughput
+
+- **saturation policy** - When a bounded work queue fills up, the saturation policy comes into play
+  - `setRejectedExecutionHandler`
+  - defaults: AbortPolicy, CallerRunsPolicy, DiscardPolicy, and DiscardOldestPolicy
+    - abort, causes execute to throw the unchecked Rejected-
+ExecutionException; the caller can catch this exception and implement its own
+overflow handling as it sees fit
+    - caller run policy means `execute` on pool makes current thread to execute the task
+
+- `unconfigurableExecutorService` decorator that exposes only
+the methods of `ExecutorService` so it cannot be further configured
+  - `newSingleThreadExecutor` is already wrapped in this manner
+
+- Any ExecutorService created through `Executors.new...` can be cast to `ThreadPoolExecutor` except `newSingleThreadExecutor`
+
+- ThreadPoolExecutor can be extended
+  - beforeExecute - executed before the task, if throws exception task is not executed as well as afterExecute
+  - afterExecute - is executed only if task finished normally, or Exception is not executed
+
+- Thread pool extended with logging and timing
+
+  ```java
+  public class TimingThreadPool extends ThreadPoolExecutor {
+      private final ThreadLocal<Long> startTime
+              = new ThreadLocal<Long>();
+      private final Logger log = Logger.getLogger("TimingThreadPool");
+      private final AtomicLong numTasks = new AtomicLong();
+      private final AtomicLong totalTime = new AtomicLong();
+      protected void beforeExecute(Thread t, Runnable r) {
+          super.beforeExecute(t, r);
+          log.fine(String.format("Thread %s: start %s", t, r));
+          startTime.set(System.nanoTime());
+      }
+      protected void afterExecute(Runnable r, Throwable t) {
+          try {
+              long endTime = System.nanoTime();
+              long taskTime = endTime - startTime.get();
+              numTasks.incrementAndGet();
+              totalTime.addAndGet(taskTime);
+              log.fine(String.format("Thread %s: end %s, time=%dns",
+                      t, r, taskTime));
+          } finally {
+              super.afterExecute(r, t);
+          }
+      }
+      protected void terminated() {
+          try {
+              log.info(String.format("Terminated: avg time=%dns",
+                      totalTime.get() / numTasks.get()));
+          } finally {
+              super.terminated();
+          }
+      }
+  }
+  ```
 
 ## References
 
