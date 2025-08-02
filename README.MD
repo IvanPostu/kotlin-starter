@@ -785,8 +785,238 @@ as they become available.
   }
   ```
 
+- The deprecated Thread.stop and suspend shouldn't be used, see oracle doc reference
+
+- **cancellation policy** an additional logic for tasks or threads that handles cancel logic
+
+  ```java
+  @ThreadSafe
+  public class PrimeGenerator implements Runnable {
+      @GuardedBy("this")
+      private final List<BigInteger> primes
+              = new ArrayList<BigInteger>();
+      private volatile boolean cancelled;
+      public void run() {
+          BigInteger p = BigInteger.ONE;
+          while (!cancelled) {
+              p = p.nextProbablePrime();
+              synchronized (this) {
+                  primes.add(p);
+              }
+          }
+      }
+      public void cancel() { cancelled = true; }
+      public synchronized List<BigInteger> get() {
+          return new ArrayList<BigInteger>(primes);
+      }
+  }
+
+  List<BigInteger> aSecondOfPrimes() throws InterruptedException {
+      PrimeGenerator generator = new PrimeGenerator();
+      new Thread(generator).start();
+      try {
+          SECONDS.sleep(1);
+      } finally {
+          generator.cancel();
+      }
+      return generator.get();
+  }
+  ```
+
+- Interruption
+
+  ```java
+  public class Thread {
+      public void interrupt() { ... } // interrupts
+      public boolean isInterrupted() { ... }
+
+      // returns true if current thread was interrupted AND resets interrupted flag to false, or false is it wasn't interrupted
+      public static boolean interrupted() { ... }
+  }
+  ```
+
+- **cancellation points** a point of logic where thread checks whether interrupted flag is true and stops itself
+
+  ```java
+  class PrimeProducer extends Thread {
+      private final BlockingQueue<BigInteger> queue;
+      PrimeProducer(BlockingQueue<BigInteger> queue) {
+          this.queue = queue;
+      }
+      public void run() {
+          try {
+              BigInteger p = BigInteger.ONE;
+              while (!Thread.currentThread().isInterrupted())
+                  queue.put(p = p.nextProbablePrime());
+          } catch (InterruptedException consumed) {
+              /* Allow thread to exit */
+          }
+      }
+      public void cancel() { interrupt(); }
+  }
+  ```
+
+- When a thread catches an InterruptedException, the interrupt status of the thread is cleared automatically.
+
+  ```java
+  public Task getNextTask(BlockingQueue<Task> queue) {
+      boolean interrupted = false;
+      try {
+          while (true) {
+              try {
+                  return queue.take();
+              } catch (InterruptedException e) {
+                  interrupted = true;
+                  // fall through and retry
+              }
+          }
+      } finally {
+          if (interrupted)
+              Thread.currentThread().interrupt();
+      }
+  }
+  ```
+
+- `Future.cancel(boolean mayInterruptIfRunning);`
+  - Setting this
+argument to `false` means “don’t run this task if it hasn’t started yet”
+  - `true` - triggers interrupt, and
+returns a value indicating whether the cancellation attempt was successful. (This
+tells you only whether it was able to deliver the interruption, not whether the task
+detected and acted on it.
+
+- Canceling a task using future
+
+  ```java
+  public static void timedRun(Runnable r,
+  long timeout, TimeUnit unit) throws InterruptedException {
+      Future<?> task = taskExec.submit(r);
+      try {
+          task.get(timeout, unit);
+      } catch (TimeoutException e) {
+          // task will be cancelled below
+      } catch (ExecutionException e) {
+          // exception thrown in task; rethrow
+          throw launderThrowable(e.getCause());
+      } finally {
+          // Harmless if task already completed
+          task.cancel(true); // interrupt if running
+      }
+  }
+  ```
+
+- ExecutorService.shutdownNow (a.k.a. abrupt shutdown) returns the list of tasks that had not yet started
+- shutdown awaits for all tasks to finish, ignore new ones
+- awaitTermination(timeout, unit); blocks current thread until executor finishes all tasks, e.g. of usage
+
+  ```java
+  boolean checkMail(Set<String> hosts, long timeout, TimeUnit unit)
+      throws InterruptedException {
+      ExecutorService exec = Executors.newCachedThreadPool();
+      final AtomicBoolean hasNewMail = new AtomicBoolean(false);
+      try {
+          for (final String host : hosts)
+              exec.execute(new Runnable() {
+                  public void run() {
+                      if (checkMail(host))
+                          hasNewMail.set(true);
+                  }
+              });
+      } finally {
+          exec.shutdown();
+          exec.awaitTermination(timeout, unit);
+      }
+      return hasNewMail.get();
+  }
+  ```
+
+- Tracking executor service that keep track of canceled tasks after shutdown, the use case is to save its state so it can be restarted later
+
+  ```java
+  public class TrackingExecutor extends AbstractExecutorService {
+      private final ExecutorService exec;
+      private final Set<Runnable> tasksCancelledAtShutdown =
+              Collections.synchronizedSet(new HashSet<Runnable>());
+      // ...
+      public List<Runnable> getCancelledTasks() {
+          if (!exec.isTerminated())
+              throw new IllegalStateException(...);
+          return new ArrayList<Runnable>(tasksCancelledAtShutdown);
+      }
+      public void execute(final Runnable runnable) {
+          exec.execute(new Runnable() {
+              public void run() {
+                  try {
+                      runnable.run();
+                  } finally {
+                      if (isShutdown()
+                              && Thread.currentThread().isInterrupted())
+                          tasksCancelledAtShutdown.add(runnable);
+                  }
+              }
+          });
+      }
+  // delegate other ExecutorService methods to exec
+  }
+  ```
+
+- **idempotent** (if performing a task twice has the same effect as performing it once)
+
+- **Thread leakage** a case when thread throws RuntimeException which is not caught and thread is terminated
+  - it is just printed to the consiole, like `e.printStackTrace()`
+- How thread pools solve this problem:
+
+  ```java
+  public void run() {
+      Throwable thrown = null;
+      try {
+          while (!isInterrupted())
+              runTask(getTaskFromWorkQueue());
+      } catch (Throwable e) {
+          thrown = e;
+      } finally {
+          threadExited(this, thrown);
+      }
+  }
+  ```
+
+- Another approach is `UncaughtExceptionHandler`
+  - global `Thread.setDefaultUncaughtExceptionHandler`
+  - specific thread `t1.setUncaughtExceptionHandler`
+  - for thread pools can be set through `ThreadFactory`
+  - if no
+handler exists, the default behavior is to print the stack trace to System.err
+- Another approach is to override `afterExecute` hook in `ThreadPoolExecutor`
+
+- JVM shutdown
+  - orderly SIGINT (Ctrl+C) or `kill -SIGINT 12345` or `kill -2 12345`
+  - abrupt SIGKILL `kill -9 12345`
+  - `Runtime.addShutdownHook` adds un-started thread for shutdown
+  - no guarantee on the order in which they are executed
+  - abrupt halts the JVM, ignoring shutdown hooks
+
+- Daemon threads
+  - JVM exits without waiting for them to finish
+  - May not call finally block
+  - May not close resource
+  - Not good for IO
+  - Good for local cache cleanup
+
+- Java finalizers runs in JVM managed thread on garbage collect
+  - can be used when the object manages resources hold by native methods
+  - The best approach is not to use
+  - use `Closeable` with try-with-resource
+
+- Java cant stop a thread, but it provides a
+cooperative interruption mechanism 
+
+- all threads are executing tasks that are blocked waiting for other
+tasks still on the work queue. This is called thread **starvation deadlock**
+
 ## References
 
+- [Why Are Thread.stop, Thread.suspend, Thread.resume, and Runtime.runFinalizersOnExit Deprecated?](https://docs.oracle.com/javase/1.5.0/docs/guide/misc/threadPrimitiveDeprecation.html)  
+Oracle. (2004, September 13). *Java 1.5.0 Documentation*. Retrieved from <https://docs.oracle.com/javase/1.5.0/docs/guide/misc/threadPrimitiveDeprecation.html>
 - Lilleaas, August (2023). *Pro Kotlin Web Apps from Scratch*.
 - Tim Lavers (Apress, 2021). *Learn to Program with Kotlin*
 - <https://codezup.com/dockerizing-kotlin-application-step-by-step-guide/>
