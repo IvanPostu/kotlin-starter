@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-222
+262
 
 ## Description
 
@@ -1144,6 +1144,101 @@ the methods of `ExecutorService` so it cannot be further configured
 created, modified, and queried only from the event-dispatching thread
 
 - The Swing event thread can be thought of as a single-threaded Executor
+
+### Threads
+
+- **versioned data model** - e.g. `CopyOnWriteArrayList` iterator traverses the collection as it existed when the iterator was created
+
+- some native libraries require that all
+access to the library, even loading the library with `System.loadLibrary`, be made
+from the same thread
+  - single-threaded executor for accessing the native library,
+and provide a proxy object that intercepts calls to the thread-confined object and
+submits them as tasks to the dedicated thread. `Future` and `newSingleThreadExecutor` work together to make this easy
+
+### Liveness hazard - deadlock
+
+- resource deadlock
+- thread-starvation deadlock
+
+- **Solutions:**
+  - Lock order
+
+    ```java
+    private static final Object tieLock = new Object();
+    public void transferMoney(final Account fromAcct,
+    final Account toAcct,
+    final DollarAmount amount)
+        throws InsufficientFundsException {
+        class Helper {
+            public void transfer() throws InsufficientFundsException {
+                if (fromAcct.getBalance().compareTo(amount) < 0)
+                    throw new InsufficientFundsException();
+                else {
+                    fromAcct.debit(amount);
+                    toAcct.credit(amount);
+                }
+            }
+        }
+        int fromHash = System.identityHashCode(fromAcct);
+        int toHash = System.identityHashCode(toAcct);
+        if (fromHash < toHash) {
+            synchronized (fromAcct) {
+                synchronized (toAcct) {
+                    new Helper().transfer();
+                }
+            }
+        } else if (fromHash > toHash) {
+            synchronized (toAcct) {
+                synchronized (fromAcct) {
+                    new Helper().transfer();
+                }
+            }
+        } else {
+            synchronized (tieLock) {
+                synchronized (fromAcct) {
+                    synchronized (toAcct) {
+                        new Helper().transfer();
+                    }
+                }
+            }
+        }
+    }
+    ```
+
+- Thread dumps include information about threads and locks that they hold
+  - JVM generates thread dump on SIGQUIT signal `kill -3`
+
+- thread priority is not recommended because it introduces platform specific logic
+  - it is better to use `Thread.sleep` or `Thread.yield` calls in odd places,
+in an attempt to give more time to lower-priority threads
+
+- **Starvation** a case when threads compete for CPU time, e.g. GUI event thread gets less CPU time due to heavy background task. As a result GUI freezes
+- **Livelock** a case when the message is taken from the queue and attempt to process it fails with retryable error which moves this task at the head of the queue and the process repeats infinitely without progress
+  - another example is optimistic lock that retries constantly
+
+- **Amdahl's Law** is a formula used to predict the theoretical maximum speedup of a computational task when only part of the task can be parallelized, while the rest must be executed serially.
+
+- synchronized block potentially causes the JVM to perform the context switch
+- non-blocking approaches that are used for example in `AtomicInteger` solves this problem and use their full scheduling quantum
+
+- **Lock contention** - many threads try to acquire the same lock and they wait for it transforming parallel program to sequential
+
+- There are three ways to reduce lock contention:
+  - Reduce the duration for which locks are held;
+  - Reduce the frequency with which locks are requested; or
+  - Replace exclusive locks with coordination mechanisms that permit
+greater concurrency.
+
+- **Lock striping** a case when a big data structure is synchronized on each portion by separate locks, allowing multiple threads to work with it in parallel, e.g. `ConcurrentHashNap` with lock per bucket
+
+- `java.util.concurrent.locks.ReadWriteLock` enforces a multiple-reader, single-writer lock-
+ing discipline: more than one reader can access the shared resource concurrently
+so long as none of them wants to modify it, but writers must acquire the lock
+exclusively
+
+- `vmstat` and `mpstat` on Unix are used for testing CPU
+- `iostat` or `perfmon` for IO
 
 ## References
 
