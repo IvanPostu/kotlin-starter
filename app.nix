@@ -48,6 +48,6 @@ pkgs.mkShell {
 
     export -f switch_java
 
-    switch_java 11
+    switch_java 21
   '';
 }
