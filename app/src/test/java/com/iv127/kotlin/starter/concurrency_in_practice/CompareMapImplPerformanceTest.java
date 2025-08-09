@@ -17,7 +17,7 @@ public class CompareMapImplPerformanceTest {
 
     //    Comparing scalability of Map implementations
     @TestFactory
-//    @Disabled
+    @org.junit.jupiter.api.Disabled
     public Stream<DynamicTest> testCompareMapImplPerformance() throws Exception {
         DataArgument[] inputData = new DataArgument[]{
                 new DataArgument(Collections.synchronizedMap(new HashMap<>()), "synchronized HashMap", 100, 1_000L, 2),

@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from collections import defaultdict
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -7,14 +8,15 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
 
-def read_jsonl(filepath):
+def read_jsonl(filepath, fields):
     data = []
     with open(filepath, 'r') as file:
         for line in file:
             try:
                 point = json.loads(line)
-                if 'numberOfThreads' in point and 'readCount' in point:
-                    data.append((int(point['numberOfThreads']), int(point['readCount'])))
+                if all(field in point for field in fields):
+                    obj = {field: point[field] for field in fields}
+                    data.append(obj)
             except json.JSONDecodeError:
                 print(f"Skipping invalid line: {line.strip()}")
     return data
@@ -45,15 +47,29 @@ def plot_data(datasets, labels=None, x_label='X', y_label='Y'):
     plt.tight_layout()
     plt.show()
 
+def groupBy(list, fieldName):
+    grouped = defaultdict()
+    for item in list:
+        key = item[fieldName]
+        if key not in grouped:
+            grouped[key] = []
+        grouped[key].append(item)
+    return grouped
+
 if __name__ == "__main__":
     current_dir = Path(__file__).parent
     path = current_dir / "temp.jsonl"
-    data_points = read_jsonl(path)
-    line1 = [(1, 1_000_000), (2, 2_000_000), (3, 3_000_000), (4, 4_000_000)]
-    line2 = [(1, 1_500_000), (2, 2_700_000), (3, 3_500_000), (4, 4_200_000)]
-    line3 = [(1, 800_000),  (2, 1_900_000), (3, 2_500_000), (4, 3_100_000)]
-    line4 = [(1, 2_200_000), (2, 3_100_000), (3, 3_900_000), (4, 5_000_000)]
+    data_points = read_jsonl(path, ["readCount", "timeFrameInMs", "numberOfThreads", "name"])
+
+    grouped_by_name = groupBy(data_points, "name")
+    
+    line1 = [(d['numberOfThreads'], d['readCount']) for d in grouped_by_name["synchronized HashMap"]]
+    line2 = [(d['numberOfThreads'], d['readCount']) for d in grouped_by_name["synchronized TreeMap"]]
+    line3 = [(d['numberOfThreads'], d['readCount']) for d in grouped_by_name["ConcurrentHashMap"]]
+    line4 = [(d['numberOfThreads'], d['readCount']) for d in grouped_by_name["ConcurrentSkipListMap"]]
+
+    print(grouped_by_name)
 
     datasets = [line1, line2, line3, line4]
-    labels = ["Dataset A", "Dataset B", "Dataset C", "Dataset D"]
-    plot_data(datasets, labels, "x test", "y test")
+    labels = list(grouped_by_name.keys())
+    plot_data(datasets, labels, "readCount (throughput)", "numberOfThreads")

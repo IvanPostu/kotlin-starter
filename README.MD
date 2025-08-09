@@ -1240,6 +1240,10 @@ exclusively
 - `vmstat` and `mpstat` on Unix are used for testing CPU
 - `iostat` or `perfmon` for IO
 
+### Comparing scalability of Map implementations
+
+<img src="./forReadme/img2.png" style="width: 650px"  />
+
 ## Python POC
 
 ```sh
