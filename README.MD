@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-262
+294
 
 ## Description
 
@@ -322,6 +322,8 @@ how to utilize the token
 
 ## TODO
 
+- FindBugs static analysis tool
+
 - Tim Lavers (Apress, 2021). *Learn to Program with Kotlin*
 
 - Jib for layered docker images - <https://github.com/GoogleContainerTools/jib>
@@ -380,6 +382,9 @@ fun test() {
 
 ## Concurrency tips
 
+- `wait/notify/notifyAll` - are used in Consumer/Producer logic
+  - All 3 should be executed in a synchronized block with the lock on the object on which this method is called.
+  - see `com.iv127.kotlin.starter.concurrency_in_practice.ObjectWaitNotifyExampleTest`
 - Specification - contract
 - Invariants - constraints
 - Post-condition - effect of an operation
@@ -1224,6 +1229,9 @@ submits them as tasks to the dedicated thread. `Future` and `newSingleThreadExec
 - thread priority is not recommended because it introduces platform specific logic
   - it is better to use `Thread.sleep` or `Thread.yield` calls in odd places,
 in an attempt to give more time to lower-priority threads
+    - `Thread.yield` is a signal to runtime environment to trigger context switch, can be no-op since [JLS 17.9]
+    - using a short but nonzero `Thread.sleep` would be
+slower but more reliable
 
 - **Starvation** a case when threads compete for CPU time, e.g. GUI event thread gets less CPU time due to heavy background task. As a result GUI freezes
 - **Livelock** a case when the message is taken from the queue and attempt to process it fails with retryable error which moves this task at the head of the queue and the process repeats infinitely without progress
@@ -1266,6 +1274,12 @@ Performance can be measured by:
 (also called latency); or
 - **Scalability**: the improvement in throughput (or lack thereof) as more resources
 (usually CPUs) are made available.
+
+Other metrics:
+
+- **variance** of service time - What percentage of operations will succeed in under 100 milliseconds?
+  - e.g. **Semaphore** with `fairness=true` has higher variance with the cost of lower throughput
+  - on `fairness=true` which is default, variance is lower, throughput is higher
 
 - `Thread.getState` should never be used in logic because even if it is in the WAITING or TIMED_WAITING state may
 temporarily transition to RUNNABLE even if the condition for which it is waiting is
@@ -1317,6 +1331,38 @@ System.gc calls with `-XX:+DisableExplicitGC`
   - **Show Retaimed Set**
   - <img style="width: 650px" src="./forReadme/img4.png" />
 
+### Performance test
+
+- Extended version of **functionality testing**
+- see `com.iv127.kotlin.starter.concurrency_in_practice.BoundedBufferTest#testPutTakeConcurrently`
+
+- A problem that affects perf. tests is GC, solutions:
+  - disable it during the test
+  - adjust test to run long enough in order to make GC execution to represent a small fraction of the total run time.
+- Another problem is JIT (Just In Time compilation)
+  - adjust test to run long enough in order to make JIT execution to represent a small fraction of the total run time.
+  - `-XX:+PrintCompilation` shows JIT compilation in console
+- Dead code elimination
+  - tricking the optimizer into
+not optimizing away your benchmark as dead code
+
+  ```java
+    // a trich which fools java runtime optimier
+    if (foo.x.hashCode() == System.nanoTime())
+            System.out.print(" "); // 
+  ```
+
+  - (The print method buffers
+output until println is called, so in the rare case that hashCode and System.nanoTime are equal no I/O is actually performed.)
+
+### JIT
+
+- JIT based on exceeding of threashold of executing the same section with the same input parameters
+- JIT based on profiling information
+- The JVM may make optimizations based on assumptions that may only be true
+temporarily, and later back them out by invalidating the compiled code if they
+become untrue
+
 ## Python POC
 
 ```sh
@@ -1325,6 +1371,13 @@ python -m venv venv
 source venv/bin/activate
 # deactivate
 ```
+
+## Quotes
+
+- "NASA devotes more of its engineering resources
+to testing (it is estimated they employ 20 testers for each developer) than any
+commercial entity could afford to—and the code produced is still not free of
+defects. In complex programs, no amount of testing can find all coding errors."
 
 ## References
 
