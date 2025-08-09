@@ -20,6 +20,12 @@ A starter Kotlin project.
 # switch java version (available only in nix shell ./app.nix)
 switch_java 8|11|17|21
 
+jps -l # shows java processes
+jstack 130201 > threaddump.txt
+jmap -dump:live,format=b,file=myheapdump.hprof 130201
+
+visualvm # part of jdk?? requires nixos package
+
 ./gradlew :app:run
 ./gradlew run
 
@@ -600,11 +606,16 @@ the caching process, good example is `LazyLoadingSupplier`
 
 - **Network congestion** - a traffic jam, but for data which happens when too many devices or users are trying to send data through a network at the same time
 
+### jvm flags
+
 - `-Djava.security.egd=file:/dev/./urandom"` avoid delay on java startup for collecting random entropy, it should be used for dev only
 - `-Xss` jvm flag, stack size of a thread default value vary between 512KB and 1MB depending on java version (ignoring OS thread limitation the less this value is the more threads we can crete)
   - `-Xss512k` 512 KB
   - `-Xss2m` 2 MB
-  - `-XX:+DisableExplicitGC` disables `System.gc()`, which by design doesn't guarantee anything by itself
+- `-XX:+DisableExplicitGC` disables `System.gc()`, which by design doesn't guarantee anything by itself
+- `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/path/to/heapdump.hprof`
+- gc logs `java -Xlog:gc*:file=gc.log:time,uptime,level,tags -Xmx1G -jar myapp.jar`
+
 - Two main factors in web applications
   - Responsiveness
   - Throughput
@@ -1291,6 +1302,21 @@ Java RNG (random number generation) most random number generator classes are thr
 HotSpot can be instructed to ignore
 System.gc calls with `-XX:+DisableExplicitGC`
 
+#### How to detect
+
+## Find memory leaks in java / play with *.hprof (heap dumps)
+
+- to be cautious because it can contain sensitive information, e.g. passwords
+
+- see / run `com.iv127.kotlin.starter.concurrency_in_practice.MemoryLeakTest`
+- run `jmap -dump:live,format=b,file=myheapdump.hprof PID`
+- open and import in `eclipse-mat` (Eclipse Memory Analyzer)
+- <img style="width: 650px" src="./forReadme/img3.png" />
+- see reference <https://www.youtube.com/watch?v=t_-WyfS9a7k>
+- **Retained Heap** means how much memory will be freed if this instance is garbage collected
+  - **Show Retaimed Set**
+  - <img style="width: 650px" src="./forReadme/img4.png" />
+
 ## Python POC
 
 ```sh
@@ -1311,3 +1337,4 @@ Oracle. (2004, September 13). *Java 1.5.0 Documentation*. Retrieved from <https:
 - <https://www.baeldung.com/kotlin/detekt-static-code-analysis>
 - <https://hofstede-matheus.medium.com/improve-code-quality-with-ktlint-detekt-and-git-hooks-d173722594e4>
 - <https://jwt.io/>
+- <https://www.youtube.com/watch?v=t_-WyfS9a7k>

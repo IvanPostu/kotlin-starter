@@ -55,6 +55,7 @@ public class BoundedBufferTest {
         }
     }
 
+    // remove synchronized methods from BoundedBuffer to really test
     @Test
     @Disabled
     public void testPutTakeConcurrently() {

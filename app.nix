@@ -12,6 +12,8 @@ pkgs.mkShell {
     pkgs.jdk11
     pkgs.jdk17
     pkgs.jdk21
+    pkgs.visualvm
+    pkgs.eclipse-mat
   ];
 
   LANG = "en_US.UTF-8";
