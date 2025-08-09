@@ -1,0 +1,36 @@
+{"readCount":37082871,"timeFrameInMs":1000,"numberOfThreads":2,"name":"synchronized HashMap"}
+{"readCount":13850233,"timeFrameInMs":1000,"numberOfThreads":2,"name":"synchronized TreeMap"}
+{"readCount":62487911,"timeFrameInMs":1000,"numberOfThreads":2,"name":"ConcurrentHashMap"}
+{"readCount":32918177,"timeFrameInMs":1000,"numberOfThreads":2,"name":"ConcurrentSkipListMap"}
+{"readCount":14764241,"timeFrameInMs":1000,"numberOfThreads":4,"name":"synchronized HashMap"}
+{"readCount":9571471,"timeFrameInMs":1000,"numberOfThreads":4,"name":"synchronized TreeMap"}
+{"readCount":106295680,"timeFrameInMs":1000,"numberOfThreads":4,"name":"ConcurrentHashMap"}
+{"readCount":50067564,"timeFrameInMs":1000,"numberOfThreads":4,"name":"ConcurrentSkipListMap"}
+{"readCount":11816956,"timeFrameInMs":1000,"numberOfThreads":8,"name":"synchronized HashMap"}
+{"readCount":8959311,"timeFrameInMs":1000,"numberOfThreads":8,"name":"synchronized TreeMap"}
+{"readCount":169983442,"timeFrameInMs":1000,"numberOfThreads":8,"name":"ConcurrentHashMap"}
+{"readCount":70126366,"timeFrameInMs":1000,"numberOfThreads":8,"name":"ConcurrentSkipListMap"}
+{"readCount":11945977,"timeFrameInMs":1000,"numberOfThreads":12,"name":"synchronized HashMap"}
+{"readCount":9010014,"timeFrameInMs":1000,"numberOfThreads":12,"name":"synchronized TreeMap"}
+{"readCount":195461232,"timeFrameInMs":1000,"numberOfThreads":12,"name":"ConcurrentHashMap"}
+{"readCount":87811681,"timeFrameInMs":1000,"numberOfThreads":12,"name":"ConcurrentSkipListMap"}
+{"readCount":11591292,"timeFrameInMs":1000,"numberOfThreads":16,"name":"synchronized HashMap"}
+{"readCount":9038500,"timeFrameInMs":1000,"numberOfThreads":16,"name":"synchronized TreeMap"}
+{"readCount":202517407,"timeFrameInMs":1000,"numberOfThreads":16,"name":"ConcurrentHashMap"}
+{"readCount":100746352,"timeFrameInMs":1000,"numberOfThreads":16,"name":"ConcurrentSkipListMap"}
+{"readCount":11832957,"timeFrameInMs":1000,"numberOfThreads":20,"name":"synchronized HashMap"}
+{"readCount":8908706,"timeFrameInMs":1000,"numberOfThreads":20,"name":"synchronized TreeMap"}
+{"readCount":210863471,"timeFrameInMs":1000,"numberOfThreads":20,"name":"ConcurrentHashMap"}
+{"readCount":103427752,"timeFrameInMs":1000,"numberOfThreads":20,"name":"ConcurrentSkipListMap"}
+{"readCount":11622496,"timeFrameInMs":1000,"numberOfThreads":24,"name":"synchronized HashMap"}
+{"readCount":9032892,"timeFrameInMs":1000,"numberOfThreads":24,"name":"synchronized TreeMap"}
+{"readCount":213058468,"timeFrameInMs":1000,"numberOfThreads":24,"name":"ConcurrentHashMap"}
+{"readCount":107493797,"timeFrameInMs":1000,"numberOfThreads":24,"name":"ConcurrentSkipListMap"}
+{"readCount":11964299,"timeFrameInMs":1000,"numberOfThreads":28,"name":"synchronized HashMap"}
+{"readCount":8962730,"timeFrameInMs":1000,"numberOfThreads":28,"name":"synchronized TreeMap"}
+{"readCount":213389812,"timeFrameInMs":1000,"numberOfThreads":28,"name":"ConcurrentHashMap"}
+{"readCount":115056556,"timeFrameInMs":1000,"numberOfThreads":28,"name":"ConcurrentSkipListMap"}
+{"readCount":11323424,"timeFrameInMs":1000,"numberOfThreads":32,"name":"synchronized HashMap"}
+{"readCount":8931017,"timeFrameInMs":1000,"numberOfThreads":32,"name":"synchronized TreeMap"}
+{"readCount":212769023,"timeFrameInMs":1000,"numberOfThreads":32,"name":"ConcurrentHashMap"}
+{"readCount":119459269,"timeFrameInMs":1000,"numberOfThreads":32,"name":"ConcurrentSkipListMap"}

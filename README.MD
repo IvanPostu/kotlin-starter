@@ -1240,6 +1240,15 @@ exclusively
 - `vmstat` and `mpstat` on Unix are used for testing CPU
 - `iostat` or `perfmon` for IO
 
+## Python POC
+
+```sh
+cd python_pocs
+python -m venv venv
+source venv/bin/activate
+# deactivate
+```
+
 ## References
 
 - [Why Are Thread.stop, Thread.suspend, Thread.resume, and Runtime.runFinalizersOnExit Deprecated?](https://docs.oracle.com/javase/1.5.0/docs/guide/misc/threadPrimitiveDeprecation.html)  

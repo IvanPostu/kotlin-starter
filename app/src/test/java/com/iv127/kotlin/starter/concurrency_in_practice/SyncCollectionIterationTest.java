@@ -33,7 +33,7 @@ public class SyncCollectionIterationTest {
     @Test
     public void testRemoveCollectionElementUsingCollectionOnIteration() {
         List<Integer> integers = IntStream.range(0, 10)
-                .mapToObj(Integer::valueOf)
+                .boxed()
                 .collect(Collectors.toCollection(() -> new ArrayList<>()));
         List<Integer> syncIntegers = Collections.synchronizedList(integers);
 
