@@ -1,6 +1,6 @@
 # Kotlin Starter
 
-294
+358
 
 ## Description
 
@@ -230,7 +230,8 @@ curl -i -X POST http://0.0.0.0:8081/db_test \
 
 - **Thread per request problem**: idle threads, e.g. a request thread is sleeping while it is waiting for a response from the database server or external service
   - **context switch** happens and this thread gets CPU time, but because it is waiting, it will be wasted
-  - **system call** time consuming operation because java does calls to OS core e.g. to lock shared data with synchronized mechanism
+  - **system call** time consuming operation because java does calls to the OS core e.g. to lock shared data with synchronized block
+    -suspend/resume thread (on synchronized block)
   - **thread scheduler** which performs **context switch**, gives CPU time even if the thread is waiting or sleeping
 
 - To fix the idle threads problem, Kotlin has a concept called **suspension**
@@ -402,6 +403,7 @@ get back the high 32 bits of one value and the low 32 bits of another.
 - volatile can be used for flags like `isInitialized` or `osShutdown`
 - Locking can guarantee both visibility and atomicity; volatile variables can
 only guarantee visibility.
+  - volatile is not atomic, for example fo operations where new value of a variable depends on its old value, e.g. increment (read-modify-write)
 - `thread confinement` - If data is only accessed from a single thread,
 no synchronization is needed (To make this
 easier, Swing provides the invokeLater mechanism to schedule a Runnable for
@@ -1166,6 +1168,9 @@ created, modified, and queried only from the event-dispatching thread
 
 ### Threads
 
+- `daemon` thread - housekeeping thread which is not terminated when JVM exits
+  - use case cache cleaning
+
 - **versioned data model** - e.g. `CopyOnWriteArrayList` iterator traverses the collection as it existed when the iterator was created
 
 - some native libraries require that all
@@ -1438,6 +1443,182 @@ try {
       }
   }
   ```
+
+- `ReadWriteLock` interface
+- `ReentrantReadWriteLock`
+  - supports fairness
+  - if writer waits for its lock, no more readers are allowed to acquire read lock until writer is served
+
+  ```java
+  public class ReadWriteMap<K,V> {
+      private final Map<K,V> map;
+      private final ReadWriteLock lock = new ReentrantReadWriteLock();
+      private final Lock r = lock.readLock();
+      private final Lock w = lock.writeLock();
+      public ReadWriteMap(Map<K,V> map) {
+          this.map = map;
+      }
+      public V put(K key, V value) {
+          w.lock();
+          try {
+              return map.put(key, value);
+          } finally {
+              w.unlock();
+          }
+      }
+      // Do the same for remove(), putAll(), clear()
+      public V get(Object key) {
+          r.lock();
+          try {
+              return map.get(key);
+          } finally {
+              r.unlock();
+          }
+      }
+      // Do the same for other read-only Map methods
+  }
+  ```
+
+- `Object.wait|notify|notifyAll` a.k.a. **intrinsic condition queues**
+  - `wait` - "I want to go to sleep, but wake me when something interesting happens"
+  - `notify|notifyAll` - "something interesting happened"
+  - on `wait` the current lock is released, and on notify, lock is reacquired by the thread similar to entering `synchronized` block
+  - `wait` can be released even without calling `notify` by any other thread, so it should be running like this
+
+    ```java
+    while(condition) {
+      wait();
+    }
+    ```
+
+    ```java
+    void stateDependentMethod() throws InterruptedException {
+        // condition predicate must be guarded by lock
+        synchronized(lock) {
+            while (!conditionPredicate())
+                lock.wait();
+        // object is now in desired state
+        }
+    }
+    ```
+
+- There is a problem called **missed signals**, example with kithen with multiple devices that use a single bell
+  - `notify` should never be used, due to error prone
+  - `notifyAll` should be used!
+    - but `notifyAll` causes all threads to awake and perform lock acquisition and context switch which is very expensive in terms of performance, an alternative is `Lock.newCondition`
+
+The equivalents of `wait`, `notify`, and `notifyAll` for
+Condition objects are `await`, `signal`, and `signalAll`.
+
+- `AbstractQueuedSynchronizer` (AQS) is a framework that java uses to implement `ReentrantLock`, `CountDownLatch`, `Semaphore`, `ReentrantReadWriteLock`, `SynchronousQueue` and `FutureTask`
+  - and many other classes from `java.util.concurrent`
+
+  - `ReentrantReadWriteLock` implementation uses AQS, operations on the read lock use the shared acquire
+and release methods; operations on the write lock use the exclusive acquire and
+release methods.
+
+### Atomic variable and non-blocking synchronization
+
+- **compare-and-swap** low-level atomic machine instruction used in `Atomic*` classes
+  - for processors that doesn't have it operation java uses 2 instructions `local-linked, store-conditional`
+  - CAS: memory:V,old:A,new:B - set V=B only if oldV=A else noOp
+  - these low-level primitives
+are exposed through the atomic variable classes
+
+- **pessimistic technique** acquire and proceed
+- **optimistic approach** relies on **collision detection**, if during the operation data was changet, operation is retried
+
+- `Atomic*` doesn't have support four `Float` and `Double`, so `floatToIntBits` and `doubleToLongBits` is used
+- `Atomic(Integer|Long|Reference)Array`
+  - allows atomic operation on array elements
+
+#### Usage of AtomicReference
+
+```java
+private final AtomicReference<IntPair> values =
+        new AtomicReference<IntPair>(new IntPair(0, 0));
+public int getLower() { return values.get().lower; }
+public int getUpper() { return values.get().upper; }
+public void setLower(int i) {
+    while (true) {
+        IntPair oldv = values.get();
+        if (i > oldv.upper)
+            throw new IllegalArgumentException(
+                    "Can’t set lower to " + i + " > upper");
+        IntPair newv = new IntPair(i, oldv.upper);
+        if (values.compareAndSet(oldv, newv))
+            return;
+    }
+}
+```
+
+#### pseudo-random number generator (PRNG)
+
+- the next “random” number is a
+deterministic function of the previous number, so a PRNG must remember the
+previous number as part of its state
+
+```java
+@ThreadSafe
+public class AtomicPseudoRandom extends PseudoRandom {
+    private AtomicInteger seed;
+    AtomicPseudoRandom(int seed) {
+        this.seed = new AtomicInteger(seed);
+    }
+    public int nextInt(int n) {
+        while (true) {
+            int s = seed.get();
+            int nextSeed = calculateNext(s);
+            if (seed.compareAndSet(s, nextSeed)) {
+                int remainder = s % n;
+                return remainder > 0 ? remainder : remainder + n;
+            }
+        }
+    }
+}
+```
+
+#### Replacement of synchronize whith atomic
+
+```java
+@ThreadSafe
+public class ConcurrentStack <E> {
+    AtomicReference<Node<E>> top = new AtomicReference<Node<E>>();
+    public void push(E item) {
+        Node<E> newHead = new Node<E>(item);
+        Node<E> oldHead;
+        do {
+            oldHead = top.get();
+            newHead.next = oldHead;
+        } while (!top.compareAndSet(oldHead, newHead));
+    }
+    public E pop() {
+        Node<E> oldHead;
+        Node<E> newHead;
+        do {
+            oldHead = top.get();
+            if (oldHead == null)
+                return null;
+            newHead = oldHead.next;
+        } while (!top.compareAndSet(oldHead, newHead));
+        return oldHead.item;
+    }
+    private static class Node <E> {
+        public final E item;
+        public Node<E> next;
+        public Node(E item) {
+            this.item = item;
+        }
+    }
+}
+```
+
+#### The ABA problem
+
+- V from A to B and then back to A is not visible
+  - solutions:
+    - `AtomicStampedReference` conditional update on pairs of value and `versioned` field that is immune to ABA problem
+    - `AtomicMarkableReference`
 
 ## Python POC
 
