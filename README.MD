@@ -230,6 +230,7 @@ curl -i -X POST http://0.0.0.0:8081/db_test \
 
 - **Thread per request problem**: idle threads, e.g. a request thread is sleeping while it is waiting for a response from the database server or external service
   - **context switch** happens and this thread gets CPU time, but because it is waiting, it will be wasted
+  - **system call** time consuming operation because java does calls to OS core e.g. to lock shared data with synchronized mechanism
   - **thread scheduler** which performs **context switch**, gives CPU time even if the thread is waiting or sleeping
 
 - To fix the idle threads problem, Kotlin has a concept called **suspension**
@@ -382,6 +383,7 @@ fun test() {
 
 ## Concurrency tips
 
+- `synchronized` lock a.k.a. intrinsic lock
 - `wait/notify/notifyAll` - are used in Consumer/Producer logic
   - All 3 should be executed in a synchronized block with the lock on the object on which this method is called.
   - see `com.iv127.kotlin.starter.concurrency_in_practice.ObjectWaitNotifyExampleTest`
@@ -1362,6 +1364,80 @@ output until println is called, so in the rare case that hashCode and System.nan
 - The JVM may make optimizations based on assumptions that may only be true
 temporarily, and later back them out by invalidating the compiled code if they
 become untrue
+
+### AOP
+
+Can be useful to detect non-compliance with the thread confinment, e.g."(Laddad, 2003) provides an example of using an aspect to wrap all calls
+to non-thread-safe Swing methods with the assertion that the call is occurring in
+the event thread"
+
+### Profilers and monitoring tools
+
+- JMX Agent provides some limited features for monitoring thread
+behavior
+
+### Explicit Locks
+
+- `Lock` interface
+- `ReentrantLock`
+  - the most importand advantage is the possibility to interrupt while waiting for lock acquiring
+  - reentrancy
+  possibility to enable `fairness` (only good when needed + for long running tasks)
+  - possibility to implement optimistic lock `boolean tryLock()`
+  - possibility to wait for lock `boolean tryLock(long time, TimeUnit unit) throws InterruptedException;`
+
+**Lock must be released in `finally` block, otherwise, the lock would never be released in case of exception**
+
+```java
+Lock lock = new ReentrantLock();
+//...
+lock.lock();
+try {
+// update object state
+// catch exceptions and restore invariants if necessary
+} finally {
+    lock.unlock();
+}
+```
+
+- Lock also supports optimistic lock
+
+  ```java
+  public boolean transferMoney(Account fromAcct,
+          Account toAcct,
+          DollarAmount amount,
+          long timeout,
+          TimeUnit unit) throws InsufficientFundsException, InterruptedException {
+      long fixedDelay = getFixedDelayComponentNanos(timeout, unit);
+      long randMod = getRandomDelayModulusNanos(timeout, unit);
+      long stopTime = System.nanoTime() + unit.toNanos(timeout);
+      while (true) {
+          if (fromAcct.lock.tryLock()) {
+              try {
+                  if (toAcct.lock.tryLock()) {
+                      try {
+                          if (fromAcct.getBalance().compareTo(amount)
+                                  < 0)
+                              throw new InsufficientFundsException();
+                          else {
+                              fromAcct.debit(amount);
+                              toAcct.credit(amount);
+                              return true;
+                          }
+                      } finally {
+                          toAcct.lock.unlock();
+                      }
+                  }
+              } finally {
+                  fromAcct.lock.unlock();
+              }
+          }
+          if (System.nanoTime() < stopTime)
+              return false;
+          NANOSECONDS.sleep(fixedDelay + rnd.nextLong() % randMod);
+      }
+  }
+  ```
 
 ## Python POC
 

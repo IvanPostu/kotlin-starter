@@ -6,6 +6,7 @@ public class JavaPlatformTypeGetInteger {
         if (i == 0) {
             return null;
         }
+
         return Integer.valueOf(i);
     }
 
