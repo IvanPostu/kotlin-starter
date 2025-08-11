@@ -1620,6 +1620,67 @@ public class ConcurrentStack <E> {
     - `AtomicStampedReference` conditional update on pairs of value and `versioned` field that is immune to ABA problem
     - `AtomicMarkableReference`
 
+### Java Memory Model
+
+The Java Memory Model is specified in terms of actions, which include reads and
+writes to variables, locks and unlocks of monitors, and starting and joining with threads. The JMM defines a partial ordering2 called **happens-before** on all actions
+within the program. To guarantee that the thread executing action B can see the
+results of action A (whether or not A and B occur in different threads), there must
+be a **happens-before** relationship between A and B. In the absence of a **happens-before**
+ordering between two operations, the JVM is free to reorder them as it pleases.
+
+The rules for **happens-before**:
+
+- Program order rule. Each action in a thread happens-before every ac-
+tion in that thread that comes later in the program order.
+
+- Monitor lock rule. An unlock on a monitor lock happens-before every
+subsequent lock on that same monitor lock.3
+
+- Volatile variable rule. A write to a volatile field happens-before every
+subsequent read of that same field.4
+
+- Thread start rule. A call to Thread.start on a thread happens-before
+every action in the started thread.
+
+- Thread termination rule. Any action in a thread happens-before any
+other thread detects that thread has terminated, either by success-
+fully return from Thread.join or by Thread.isAlive returning
+false.
+
+- Interruption rule. A thread calling interrupt on another thread
+happens-before the interrupted thread detects the interrupt (either
+by having InterruptedException thrown, or invoking isInterrupted or interrupted).
+
+- Finalizer rule. The end of a constructor for an object happens-before
+the start of the finalizer for that object.
+
+- Transitivity. If A happens-before B, and B happens-before C, then A
+happens-before C.
+
+#### Double Checked Locking
+
+- is considered anti-pattern because
+  - Thread A first initializes and gets Resource
+  - Thread B may see resource partially initialized (case when it returns before initialization)
+  - `volatile` resource solves it
+
+#### Initialization safety
+
+- all fields see values set to final fields by constructor (Immutability)
+  - All writes to final
+fields made by the constructor, as well as to any variables reachable through those
+fields, become “frozen” when the constructor completes, and any thread that
+obtains a reference to that object is guaranteed to see a value that is at least as up
+to date as the frozen value.
+
+## Quotes
+
+- "NASA devotes more of its engineering resources
+to testing (it is estimated they employ 20 testers for each developer) than any
+commercial entity could afford to—and the code produced is still not free of
+defects. In complex programs, no amount of testing can find all coding errors."
+
 ## Python POC
 
 ```sh
@@ -1628,13 +1689,6 @@ python -m venv venv
 source venv/bin/activate
 # deactivate
 ```
-
-## Quotes
-
-- "NASA devotes more of its engineering resources
-to testing (it is estimated they employ 20 testers for each developer) than any
-commercial entity could afford to—and the code produced is still not free of
-defects. In complex programs, no amount of testing can find all coding errors."
 
 ## References
 
